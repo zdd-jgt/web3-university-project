@@ -1,0 +1,17 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Privy 3.37.1 resolves viem 2.55.13 while its ethereum helper declares a
+# patch-exact 2.55.10 peer. Keep this exception scoped instead of disabling
+# strict peer checks for the whole workspace.
+peerDependencyRules:
+  allowedVersions:
+    "@privy-io/ethereum@0.2.2>viem": "2.55.13"
+
+onlyBuiltDependencies:
+  - "@biomejs/biome"
+  - "@prisma/client"
+  - "@prisma/engines"
+  - "esbuild"
+  - "prisma"

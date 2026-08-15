@@ -1,0 +1,13 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    schema: "../../apps/api/prisma/migrations/20260815180000_initial/migration.sql"
+    queries: "internal/storage/queries"
+    gen:
+      go:
+        package: "sqlc"
+        out: "internal/storage/sqlc"
+        sql_package: "pgx/v5"
+        emit_json_tags: false
+        emit_interface: false
+        emit_empty_slices: true

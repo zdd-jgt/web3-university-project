@@ -1,0 +1,124 @@
+# Local Course Publication Tasks
+
+- [ ] T-001: Add recoverable ADMIN publication contracts to the course API ~30min
+  - role: backend
+  - depends_on: none
+  - owned_paths: apps/api/src/courses/courses.controller.ts, apps/api/src/courses/courses.service.ts, apps/api/test/course-workflow.spec.ts, apps/api/test/course-admin-publication.spec.ts
+  - shared_files: none
+  - risk: medium
+  - qa_level: QA-2
+  - review_required: yes
+  - acceptance: AC-001, AC-002, AC-003
+  - test_cases: TC-001, TC-002, TC-003, TC-004
+  - verify: api-course-publish
+  - review_verify: api-typecheck
+  - visual_required: no
+  - agent_route: terra-backend
+  - estimated_tokens: 6000
+  - estimated_time: 30min
+  - goal_required: no
+  - rollback_or_blocker: No Prisma change is allowed; if the API contract requires schema state, block and redesign.
+
+- [ ] T-002: Fix the Anvil deployer and Course Manager publication fixture ~30min
+  - role: backend
+  - depends_on: T-001
+  - owned_paths: packages/contracts/script/DeployLocal.s.sol, packages/contracts/test/DeployLocal.t.sol
+  - shared_files: none
+  - risk: medium
+  - qa_level: QA-2
+  - review_required: yes
+  - acceptance: AC-004
+  - test_cases: TC-005, TC-006
+  - verify: contracts-course-catalog
+  - review_verify: contracts-format
+  - visual_required: no
+  - agent_route: terra-backend
+  - estimated_tokens: 5000
+  - estimated_time: 30min
+  - goal_required: no
+  - rollback_or_blocker: Docker Desktop must be running; no private key may be embedded and the deploy script must reject non-31337 chains.
+
+- [ ] T-003: Prove confirmed and exact Catalog projection behavior ~1h
+  - role: backend
+  - depends_on: T-002
+  - owned_paths: services/worker/internal/indexer/catalog.go, services/worker/internal/indexer/catalog_test.go, services/worker/internal/storage/postgres.go, services/worker/internal/storage/postgres_integration_test.go
+  - shared_files: none
+  - risk: high
+  - qa_level: QA-3
+  - review_required: yes
+  - acceptance: AC-005, AC-006, AC-007
+  - test_cases: TC-007, TC-008, TC-009
+  - verify: worker-catalog-postgres
+  - review_verify: worker-vet
+  - visual_required: no
+  - agent_route: sol
+  - estimated_tokens: 10000
+  - estimated_time: 1h
+  - goal_required: no
+  - rollback_or_blocker: Production logic changes require a failing focused test; a skipped PostgreSQL test is not acceptance evidence.
+
+- [ ] T-004: Verify public API visibility before and after projection ~30min
+  - role: backend
+  - depends_on: T-003
+  - owned_paths: apps/api/test/course-publication-visibility.spec.ts
+  - shared_files: apps/api/src/courses/courses.service.ts
+  - risk: medium
+  - qa_level: QA-2
+  - review_required: yes
+  - acceptance: AC-008
+  - test_cases: TC-009, TC-010
+  - verify: api-course-publish
+  - review_verify: api-typecheck
+  - visual_required: no
+  - agent_route: terra-backend
+  - estimated_tokens: 4000
+  - estimated_time: 30min
+  - goal_required: no
+  - rollback_or_blocker: The shared service file is read-only for this task; a required production change needs a new scope decision.
+
+- [ ] T-005: Run the serialized local API-to-Anvil-to-Worker closure ~1h
+  - role: qa
+  - depends_on: T-004
+  - owned_paths: infra/scripts/local-course-publication-e2e.sh
+  - shared_files: none
+  - risk: high
+  - qa_level: QA-3
+  - review_required: yes
+  - acceptance: AC-009
+  - test_cases: TC-011
+  - verify: local-course-publication-e2e
+  - review_verify: local-course-publication-e2e
+  - visual_required: no
+  - agent_route: sol
+  - estimated_tokens: 10000
+  - estimated_time: 1h
+  - goal_required: no
+  - rollback_or_blocker: Start only minimum local containers, stop feature-owned processes afterward, and block if Docker is unavailable.
+
+- [ ] T-006: Record only verified local evidence and residual risks ~15min
+  - role: general
+  - depends_on: T-005
+  - owned_paths: docs/runbook.md, docs/status.md
+  - shared_files: none
+  - risk: low
+  - qa_level: QA-1
+  - review_required: yes
+  - acceptance: AC-009
+  - test_cases: TC-011, TC-012
+  - verify: repo-check
+  - review_verify: repo-typecheck
+  - visual_required: no
+  - agent_route: luna
+  - estimated_tokens: 2500
+  - estimated_time: 15min
+  - goal_required: no
+  - rollback_or_blocker: Documentation may claim only commands and cross-layer evidence actually observed.
+
+## Execution rule
+
+- Execute strictly T-001 → T-002 → T-003 → T-004 → T-005 → T-006.
+- Luna performs read-only exploration and final low-risk evidence compression.
+- Terra implements medium-risk scoped work.
+- Sol owns high-risk work, reviews every submitted task and gives the final feature verdict.
+- No second implementation task starts while a prior task is running, submitted or awaiting review.
+

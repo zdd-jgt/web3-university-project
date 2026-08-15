@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "executionPolicy": "sequential",
+  "parallelRequiresConfirmation": true,
+  "coordinatorOwnsSharedState": true,
+  "runner": {
+    "enabled": true,
+    "command": "/Users/jgt/.volta/bin/node /Users/jgt/.codex/skills/xj-ai/scripts/xj-runner.mjs check",
+    "xjRunHarness": "/Users/jgt/.volta/bin/node /Users/jgt/JGTCode/codex/project/project-xj-harness/src/xj-run.mjs"
+  },
+  "commands": {
+    "lint": "/Users/jgt/.volta/bin/pnpm check",
+    "typecheck": "/Users/jgt/.volta/bin/pnpm typecheck",
+    "test": "/Users/jgt/.volta/bin/pnpm test",
+    "build": "/Users/jgt/.volta/bin/pnpm build",
+    "goTest": "go test ./...",
+    "goVet": "go vet ./...",
+    "contractsTest": "docker run --rm -v /Users/jgt/JGTCode/codex/project/web3-university-project:/workspace -w /workspace/packages/contracts ghcr.io/foundry-rs/foundry:v1.7.1 forge test -vvv"
+  }
+}

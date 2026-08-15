@@ -1,0 +1,47 @@
+"""
+The latest on-chain configuration observed for one CourseCatalog course.
+This is an event-derived read model, not the authorization source for purchases.
+"""
+type Course @entity(immutable: false) {
+  id: ID!
+  courseId: BigInt!
+  priceYD: BigInt!
+  payoutWallet: Bytes!
+  metadataHash: Bytes!
+  version: BigInt!
+  status: String!
+  updatedAt: BigInt!
+  updatedBlock: BigInt!
+}
+
+"""
+One immutable CourseMarket purchase event.
+"""
+type CoursePurchase @entity(immutable: true) {
+  id: ID!
+  buyer: Bytes!
+  courseId: BigInt!
+  priceYD: BigInt!
+  payoutWallet: Bytes!
+  teacherAmount: BigInt!
+  treasury: Bytes!
+  platformAmount: BigInt!
+  purchasedAt: BigInt!
+  transactionHash: Bytes!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+}
+
+"""
+One immutable CertificateSBT issuance event.
+"""
+type Certificate @entity(immutable: true) {
+  id: ID!
+  student: Bytes!
+  courseId: BigInt!
+  tokenId: BigInt!
+  tokenURI: String!
+  transactionHash: Bytes!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+}

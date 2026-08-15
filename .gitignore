@@ -1,0 +1,32 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+node_modules/
+.pnpm-store/
+dist/
+coverage/
+playwright-report/
+test-results/
+*.log
+
+# Vite and TypeScript
+.vite/
+*.tsbuildinfo
+
+# Prisma
+apps/api/prisma/dev.db*
+
+# Foundry
+packages/contracts/cache/
+packages/contracts/out/
+packages/contracts/broadcast/
+packages/contracts/lib/
+
+# Go
+services/worker/bin/
+services/worker/coverage.out
+
+# Local infrastructure
+infra/data/
+infra/backups/

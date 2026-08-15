@@ -1,0 +1,278 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+enum TeacherApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+enum CourseStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  PUBLISHED
+  ARCHIVED
+}
+enum AssetStatus {
+  READY
+  PROCESSING
+  FAILED
+}
+enum CertificateStatus {
+  PENDING
+  MINTING
+  MINTED
+  FAILED
+}
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  DELIVERED
+  FAILED
+}
+
+model User {
+  id String @id @default(cuid())
+  privySubject String @unique
+  displayName String?
+  role UserRole @default(STUDENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  challenges ProfileChallenge[]
+  applications TeacherApplication[]
+  courses Course[]
+  comments Comment[]
+  learningEvents LearningEvent[]
+  segments LearningSegment[]
+  completions CourseCompletion[]
+  wallets Wallet[]
+}
+
+model Wallet {
+  id String @id @default(cuid())
+  userId String
+  address String
+  chainId Int
+  verifiedAt DateTime
+  isPrimary Boolean @default(false)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  completions CourseCompletion[]
+  @@unique([chainId, address])
+  @@index([userId, isPrimary])
+}
+
+/// Immutable chain-log observation. Only the chain indexer/worker may insert or canonicalize it.
+model PurchaseEvent {
+  id String @id @default(cuid())
+  chainId Int
+  txHash String
+  logIndex Int
+  blockNumber BigInt
+  blockHash String
+  canonical Boolean @default(true)
+  buyerWallet String
+  chainCourseId String
+  observedAt DateTime @default(now())
+  projection EntitlementProjection?
+  @@unique([chainId, txHash, logIndex])
+  @@index([chainId, chainCourseId, buyerWallet, canonical])
+}
+
+/// Durable reorg-aware cursor for the Go purchase indexer; one row per contract event stream.
+model ChainCheckpoint {
+  id String @id @default(cuid())
+  chainId Int
+  contractAddress String
+  stream String
+  nextBlock BigInt
+  blockHash String?
+  updatedAt DateTime @updatedAt
+  @@unique([chainId, contractAddress, stream])
+}
+
+/// Rebuildable entitlement read model derived only from canonical PurchaseEvent records.
+model EntitlementProjection {
+  id String @id @default(cuid())
+  chainId Int
+  buyerWallet String
+  chainCourseId String
+  sourceEventId String @unique
+  grantedAt DateTime @default(now())
+  revokedAt DateTime?
+  sourceEvent PurchaseEvent @relation(fields: [sourceEventId], references: [id], onDelete: Restrict)
+  @@unique([chainId, buyerWallet, chainCourseId])
+  @@index([chainId, buyerWallet, chainCourseId, revokedAt])
+}
+
+model ProfileChallenge {
+  id String @id @default(cuid())
+  userId String
+  nonce String @unique
+  expiresAt DateTime
+  usedAt DateTime?
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, expiresAt])
+}
+
+model TeacherApplication {
+  id String @id @default(cuid())
+  userId String
+  statement String
+  status TeacherApplicationStatus @default(PENDING)
+  reviewedBy String?
+  reviewedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, status])
+}
+
+model Course {
+  id String @id @default(cuid())
+  teacherId String
+  chainId Int?
+  catalogAddress String?
+  chainCourseId String?
+  // Chain-observed course facts. These are never accepted by browser DTOs.
+  priceYD Decimal? @db.Decimal(78, 0)
+  payoutWallet String?
+  metadataHash String?
+  // Teacher proposal and its deterministic review hash. These are not chain facts.
+  requestedPriceYD Decimal? @db.Decimal(78, 0)
+  requestedPayoutWallet String?
+  submissionHash String? @unique
+  certificateMetadataUri String?
+  reviewedBy String?
+  reviewedAt DateTime?
+  title String
+  description String
+  status CourseStatus @default(DRAFT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  teacher User @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  lessons Lesson[]
+  comments Comment[]
+  completions CourseCompletion[]
+  @@index([teacherId, status])
+  @@unique([chainId, catalogAddress, chainCourseId])
+  @@index([chainId, catalogAddress])
+}
+
+model Lesson {
+  id String @id @default(cuid())
+  courseId String
+  title String
+  position Int
+  required Boolean @default(true)
+  createdAt DateTime @default(now())
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  video VideoAsset?
+  events LearningEvent[]
+  segments LearningSegment[]
+  @@unique([courseId, position])
+}
+
+model VideoAsset {
+  id String @id @default(cuid())
+  lessonId String @unique
+  objectKey String @unique
+  captionsObjectKey String? @unique
+  durationMs Int
+  status AssetStatus @default(PROCESSING)
+  createdAt DateTime @default(now())
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id String @id @default(cuid())
+  courseId String
+  authorId String
+  parentId String?
+  body String
+  deletedAt DateTime?
+  moderatedBy String?
+  moderationReason String?
+  createdAt DateTime @default(now())
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  parent Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Restrict)
+  replies Comment[] @relation("CommentReplies")
+  @@index([courseId, deletedAt, createdAt])
+}
+
+model LearningEvent {
+  id String @id @default(cuid())
+  userId String
+  lessonId String
+  idempotencyKey String
+  startMs Int
+  endMs Int
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  @@unique([userId, idempotencyKey])
+  @@index([userId, lessonId, createdAt])
+}
+
+model LearningSegment {
+  id String @id @default(cuid())
+  userId String
+  lessonId String
+  startMs Int
+  endMs Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  @@index([userId, lessonId, startMs])
+}
+
+model CourseCompletion {
+  id String @id @default(cuid())
+  courseId String
+  userId String
+  buyerWalletId String
+  status CertificateStatus @default(PENDING)
+  txHash String? @unique
+  tokenId String? @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  course Course @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  buyerWallet Wallet @relation(fields: [buyerWalletId], references: [id], onDelete: Restrict)
+  outbox OutboxEvent?
+  @@unique([courseId, buyerWalletId])
+  @@unique([courseId, userId])
+}
+
+model OutboxEvent {
+  id String @id @default(cuid())
+  topic String
+  dedupeKey String @unique
+  payload Json
+  status OutboxStatus @default(PENDING)
+  attempts Int @default(0)
+  availableAt DateTime @default(now())
+  leaseOwner String?
+  leaseExpiresAt DateTime?
+  deliveredAt DateTime?
+  lastError String?
+  completionId String @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  completion CourseCompletion @relation(fields: [completionId], references: [id], onDelete: Cascade)
+  @@index([status, availableAt])
+  @@index([status, availableAt, leaseExpiresAt])
+}

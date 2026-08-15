@@ -1,0 +1,75 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: CourseCatalog
+    network: sepolia
+    source:
+      # DEPLOYMENT BLOCKER: replace with the actual Sepolia CourseCatalog address.
+      # The zero address is deliberately invalid for deployment.
+      address: "0x0000000000000000000000000000000000000000"
+      abi: CourseCatalog
+      # DEPLOYMENT BLOCKER: replace with the CourseCatalog deployment block.
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Course
+      abis:
+        - name: CourseCatalog
+          file: ./abis/CourseCatalog.json
+      eventHandlers:
+        - event: CourseConfigured(indexed uint256,uint256,indexed address,bytes32,uint64)
+          handler: handleCourseConfigured
+        - event: CourseStatusChanged(indexed uint256,uint8,uint8,uint64)
+          handler: handleCourseStatusChanged
+      file: ./src/course-catalog.ts
+  - kind: ethereum
+    name: CourseMarket
+    network: sepolia
+    source:
+      # DEPLOYMENT BLOCKER: replace with the actual Sepolia CourseMarket address.
+      address: "0x0000000000000000000000000000000000000000"
+      abi: CourseMarket
+      # DEPLOYMENT BLOCKER: replace with the CourseMarket deployment block.
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - CoursePurchase
+      abis:
+        - name: CourseMarket
+          file: ./abis/CourseMarket.json
+      eventHandlers:
+        - event: CoursePurchased(indexed address,indexed uint256,uint256,indexed address,uint256,address,uint256,uint64)
+          handler: handleCoursePurchased
+      file: ./src/course-market.ts
+  - kind: ethereum
+    name: CertificateSBT
+    network: sepolia
+    source:
+      # DEPLOYMENT BLOCKER: replace with the actual Sepolia CertificateSBT address.
+      address: "0x0000000000000000000000000000000000000000"
+      abi: CertificateSBT
+      # DEPLOYMENT BLOCKER: replace with the CertificateSBT deployment block.
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Certificate
+      abis:
+        - name: CertificateSBT
+          file: ./abis/CertificateSBT.json
+      eventHandlers:
+        - event: CertificateMinted(indexed address,indexed uint256,indexed uint256,string)
+          handler: handleCertificateMinted
+      file: ./src/certificate.ts

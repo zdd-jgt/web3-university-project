@@ -1,0 +1,17 @@
+[
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "address", "name": "buyer", "type": "address" },
+      { "indexed": true, "internalType": "uint256", "name": "courseId", "type": "uint256" },
+      { "indexed": false, "internalType": "uint256", "name": "priceYD", "type": "uint256" },
+      { "indexed": true, "internalType": "address", "name": "payoutWallet", "type": "address" },
+      { "indexed": false, "internalType": "uint256", "name": "teacherAmount", "type": "uint256" },
+      { "indexed": false, "internalType": "address", "name": "treasury", "type": "address" },
+      { "indexed": false, "internalType": "uint256", "name": "platformAmount", "type": "uint256" },
+      { "indexed": false, "internalType": "uint64", "name": "purchasedAt", "type": "uint64" }
+    ],
+    "name": "CoursePurchased",
+    "type": "event"
+  }
+]
