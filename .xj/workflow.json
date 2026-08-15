@@ -5,6 +5,7 @@
   "coordinatorOwnsSharedState": true,
   "runner": {
     "enabled": true,
+    "evidenceSource": "harness-events-v1",
     "command": "/Users/jgt/.volta/bin/node /Users/jgt/.codex/skills/xj-ai/scripts/xj-runner.mjs check",
     "xjRunHarness": "/Users/jgt/.volta/bin/node /Users/jgt/JGTCode/codex/project/project-xj-harness/src/xj-run.mjs"
   },
