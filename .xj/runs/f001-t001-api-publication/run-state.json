@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "runId": "f001-t001-api-publication",
+  "status": "blocked",
+  "startedAt": "2026-08-15T12:51:13.633Z",
+  "baseline": "9924188432281cd497a95ef8c24f4c200cf8d4ad",
+  "task": "Add recoverable ADMIN publication contracts to the course API",
+  "role": "backend",
+  "risk": "medium",
+  "route": "terra-backend",
+  "ownedPaths": [
+    "apps/api/src/courses/courses.controller.ts",
+    "apps/api/src/courses/courses.service.ts",
+    "apps/api/test/course-workflow.spec.ts",
+    "apps/api/test/course-admin-publication.spec.ts"
+  ],
+  "preexistingChanges": [],
+  "preexistingFingerprints": {},
+  "uiDevelopment": false,
+  "visualRequired": false,
+  "uiGoal": null,
+  "validationFailures": 0,
+  "lastEventHash": "fef8f1033fe145ee8cb6adc768291fd11e6812f6407848728febafcec71eb89a",
+  "blockedAt": "2026-08-15T12:51:56.967Z",
+  "blocker": {
+    "code": "E_SCOPE_CONTRACT",
+    "reason": "Coordinator-owned feature XJ state paths were absent from the Harness scope; restart with explicit workflow state scope before code changes."
+  }
+}
