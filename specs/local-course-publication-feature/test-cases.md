@@ -1,4 +1,4 @@
-# Local Course Publication Test Cases
+# Local Course Publication Feature Test Cases
 
 ## TC-001 ADMIN review queue
 

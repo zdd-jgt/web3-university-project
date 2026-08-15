@@ -1,4 +1,4 @@
-# Local Course Publication Tasks
+# Local Course Publication Feature Tasks
 
 - [ ] T-001: Add recoverable ADMIN publication contracts to the course API ~30min
   - role: backend

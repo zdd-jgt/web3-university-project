@@ -1,4 +1,4 @@
-# Local Course Publication Design
+# Local Course Publication Feature Design
 
 ## First-principles decision
 

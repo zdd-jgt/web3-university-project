@@ -1,4 +1,4 @@
-# Local Course Publication Requirements
+# Local Course Publication Feature Requirements
 
 ## Feature information
 

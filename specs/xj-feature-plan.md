@@ -12,7 +12,7 @@
 
 | ID | Feature | Status | Depends on | Ready when | Risk | QA | Review | Completion criteria |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| F-001 | `specs/local-course-publication` | ready | none | Git baseline and XJ Harness are valid | high | QA-3 | required | AC-001 through AC-009 have evidence and feature review passes |
+| F-001 | `specs/local-course-publication-feature` | ready | none | Git baseline and XJ Harness are valid | high | QA-3 | required | AC-001 through AC-009 have evidence and feature review passes |
 
 ## Ready Queue
 
