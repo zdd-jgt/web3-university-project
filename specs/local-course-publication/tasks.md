@@ -66,7 +66,7 @@
   - qa_level: QA-2
   - review_required: yes
   - acceptance: AC-008
-  - test_cases: TC-009, TC-010
+  - test_cases: TC-010
   - verify: api-course-publish
   - review_verify: api-typecheck
   - visual_required: no
@@ -121,4 +121,3 @@
 - Terra implements medium-risk scoped work.
 - Sol owns high-risk work, reviews every submitted task and gives the final feature verdict.
 - No second implementation task starts while a prior task is running, submitted or awaiting review.
-
