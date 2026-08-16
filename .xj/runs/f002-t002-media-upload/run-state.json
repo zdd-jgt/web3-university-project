@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "runId": "f002-t002-media-upload",
+  "status": "completed",
+  "startedAt": "2026-08-16T04:12:12.022Z",
+  "baseline": "49d8cbcf02c58a44779de1713c6ea34e330b47a5",
+  "task": "T-002",
+  "role": "backend",
+  "risk": "high",
+  "route": "sol",
+  "ownedPaths": [
+    "apps/api/src/media",
+    "apps/api/src/storage/storage-signer.ts",
+    "apps/api/src/app.module.ts",
+    "apps/api/test/media-upload.spec.ts"
+  ],
+  "preexistingChanges": [
+    ".xj/runs/f002-t001-media-schema-a2/events.jsonl",
+    ".xj/runs/f002-t001-media-schema-a2/run-state.json",
+    ".xj/runs/f002-t001-media-schema-a3/events.jsonl",
+    ".xj/runs/f002-t001-media-schema-a3/run-state.json",
+    ".xj/runs/f002-t001-media-schema/events.jsonl",
+    ".xj/runs/f002-t001-media-schema/run-state.json",
+    "apps/web/src/features/swap/SwapPage.test.tsx",
+    "apps/web/src/features/swap/SwapPage.tsx",
+    "apps/web/src/features/swap/swap-domain.test.ts",
+    "apps/web/src/features/swap/swap-domain.ts",
+    "apps/web/src/features/swap/uniswap-v4.test.ts",
+    "apps/web/src/features/swap/uniswap-v4.ts",
+    "apps/web/src/pages/app.tsx",
+    "apps/web/src/styles.css",
+    "apps/web/src/test/setup.ts",
+    "designRead.md",
+    "docs/flows.md",
+    "docs/runbook.md",
+    "docs/status.md",
+    "docs/uniswap-v4-pool-plan.md",
+    "services/worker/internal/storage/queries/outbox.sql",
+    "services/worker/internal/storage/sqlc/outbox.sql.go"
+  ],
+  "preexistingFingerprints": {
+    ".xj/runs/f002-t001-media-schema-a2/events.jsonl": "953e14c2c012c7992d09f6ac90b0ac82568a6da50f06aab2b0538921635d328c",
+    ".xj/runs/f002-t001-media-schema-a2/run-state.json": "4c38b16017ba4a7ac2607faf61d8c212d7793562e88c876d297634e54aa45759",
+    ".xj/runs/f002-t001-media-schema-a3/events.jsonl": "5bef83813676f768528aa2d8b529cecf278b43e875924adf534b6c5278af78dd",
+    ".xj/runs/f002-t001-media-schema-a3/run-state.json": "7918f78e49cb1921e182adc63f6ac8bd43e7eddf73e3e44d6364ba711ce7593c",
+    ".xj/runs/f002-t001-media-schema/events.jsonl": "f987a23a729d660172fbf6e2fb5afecbad057a4b76cf8faa0698afd074836b77",
+    ".xj/runs/f002-t001-media-schema/run-state.json": "c7b5b459cb56bdbea67113178269a774fe58594dcc72298d3d9355ecb284693e",
+    "apps/web/src/features/swap/SwapPage.test.tsx": "1bee65d4e7f7ed2b6c3c7ae9e69040e1c2ce5ad38c9178e68a12a0ba6596db7a",
+    "apps/web/src/features/swap/SwapPage.tsx": "8c714c675b922613b4f4a64c24a86ecc8750d6ca0e47ef0d60da60f184a864dc",
+    "apps/web/src/features/swap/swap-domain.test.ts": "08a110261364400d39f7453dee3faba4a86b39669ad897b899dfad495cb5d450",
+    "apps/web/src/features/swap/swap-domain.ts": "c576b5859355746ee140b997d548128e86d12b10e38539824c6bc10f3844b740",
+    "apps/web/src/features/swap/uniswap-v4.test.ts": "63b5334c081309707e41fff846f255897743dcdae41f1467e3a49d4f53c3bd82",
+    "apps/web/src/features/swap/uniswap-v4.ts": "c1278287c882ac2222d302319416d7a71cf26f197b76d14e2c821da6786bf559",
+    "apps/web/src/pages/app.tsx": "781209d14e04d64df2d33ea7bf8292bbc511de8230390893b935169fd619962e",
+    "apps/web/src/styles.css": "4f394c93edb1811f913323f3dbb06c3365502e78f82bfc68a5d126c0adca569a",
+    "apps/web/src/test/setup.ts": "c2ccf2417a8183a91935356b3d91c9aefc75b23abe2e72e335e671c12654f65d",
+    "designRead.md": "d38e5db19663a6ad5625baf337d74f3eff34ff9f5180f4b1a041abc050ca9053",
+    "docs/flows.md": "0441214c4135b4f7a0449de1711e2e0b24b51d53a2fa72ca2289d1c32e2a00ec",
+    "docs/runbook.md": "8619ad05882080e7e62d7ad2c478ec566e4a66b3bc28cbe3afe572e9bf307b1b",
+    "docs/status.md": "36dea272fec8a38f2cbf9bde8a3f577b49b5fa400a1aa4f5a98467d097e4cfd5",
+    "docs/uniswap-v4-pool-plan.md": "f6e7acc96dee107fcb8ea30d8d9231eddefd19fc1c3fc95c3d57a0ba20acc97b",
+    "services/worker/internal/storage/queries/outbox.sql": "ba22a85ae5a675af1573aa01478bacdd329191b84733dd1fc78f263247cdc25a",
+    "services/worker/internal/storage/sqlc/outbox.sql.go": "f4a54e9b7d9261fcab8637c72b1da057ab98f1d6dd0c33b29464e2a7c908e8cf"
+  },
+  "uiDevelopment": false,
+  "visualRequired": false,
+  "uiGoal": null,
+  "validationFailures": 0,
+  "lastEventHash": "9a120f9159df7c6c0f802419721e64d68830977401c321f22513fc057e0c9a06",
+  "submittedAt": "2026-08-16T04:18:50.296Z",
+  "verification": {
+    "name": "api-media-upload",
+    "argv": [
+      "/Users/jgt/.volta/bin/pnpm",
+      "--filter",
+      "@web3-university/api",
+      "test",
+      "--",
+      "media-upload.spec.ts"
+    ],
+    "startedAt": "2026-08-16T04:18:46.672Z",
+    "finishedAt": "2026-08-16T04:18:50.072Z",
+    "durationMs": 3398,
+    "exitCode": 0,
+    "outputHash": "05d16b2c440b5e3870b6a1b6da6e3414e468d7be3d09d77a169f746faeba8fe3",
+    "outputSummary": "\n> @web3-university/api@0.1.0 test /Users/jgt/JGTCode/codex/project/web3-university-project/apps/api\n> vitest run -- media-upload.spec.ts\n\n\n RUN  v3.2.4 /Users/jgt/JGTCode/codex/project/web3-university-project/apps/api\n\n ✓ test/teacher-review.spec.ts (1 test) 7ms\n ✓ test/media-upload.spec.ts (5 tests) 26ms\n ✓ test/ranges.spec.ts (3 tests) 5ms\n ✓ test/local-adapters.spec.ts (5 tests) 21ms\n ✓ test/course-workflow.spec.ts (4 tests) 24ms\n ✓ test/profile-signature.spec.ts (1 test) 64ms\n ↓ test/media-schema.spec.ts (3 tests | 3 skipped)\n ✓ test/course-admin-publication.spec.ts (6 tests) 16ms\n ✓ test/app-module.spec.ts (1 test) 23ms\n\n Test Files  8 passed | 1 skipped (9)\n      Tests  26 passed | 3 skipped (29)\n   Start at  12:18:47\n   Duration  2.30s (transform 613ms, setup 0ms, collect 7.41s, tests 186ms, environment 4ms, prepare 1.34s)\n\n",
+    "environment": {
+      "node": "v24.14.0",
+      "platform": "darwin",
+      "arch": "x64"
+    }
+  },
+  "changedFiles": [
+    "apps/api/src/app.module.ts",
+    "apps/api/src/media/media.controller.ts",
+    "apps/api/src/media/media.module.ts",
+    "apps/api/src/media/media.service.ts",
+    "apps/api/src/storage/storage-signer.ts",
+    "apps/api/test/media-upload.spec.ts"
+  ],
+  "changedFingerprints": {
+    "apps/api/src/app.module.ts": "d2e7ab103f51dfb7430f395f6a998342923d5c7bd3102233168851db7bffc551",
+    "apps/api/src/media/media.controller.ts": "75287edae8c08c370bbdac71924fd0a52e1089c61d9b5a9ac4dafe55ad968919",
+    "apps/api/src/media/media.module.ts": "214929e1c7c7475a51fb9444ba8cbd27535caa3cfc01228f90246351311b504b",
+    "apps/api/src/media/media.service.ts": "1124811fd1c9584779b2cbc3bd16e37326cb8fe6b2dd88137a7939fa82cb853d",
+    "apps/api/src/storage/storage-signer.ts": "4d9fe81c1c474fd9fa0391f27b08e930a2014c8c2cb6d4fd8fa0f0dcea43d551",
+    "apps/api/test/media-upload.spec.ts": "8eac26c2f0a2937345aa6ec025becfd63c97fd9e2fc98a90ddb72b084a97ae81"
+  },
+  "reviewedAt": "2026-08-16T04:19:18.702Z",
+  "review": {
+    "result": "PASS_WITH_NOTES",
+    "verification": {
+      "name": "api-typecheck",
+      "argv": [
+        "/Users/jgt/.volta/bin/pnpm",
+        "--filter",
+        "@web3-university/api",
+        "typecheck"
+      ],
+      "startedAt": "2026-08-16T04:19:14.228Z",
+      "finishedAt": "2026-08-16T04:19:18.698Z",
+      "durationMs": 4469,
+      "exitCode": 0,
+      "outputHash": "eb4a5a1cf54fea1ab9330969ef711b9b1081ab5d3fb8b0894c62adb1d6cd13df",
+      "outputSummary": "\n> @web3-university/api@0.1.0 typecheck /Users/jgt/JGTCode/codex/project/web3-university-project/apps/api\n> tsc --noEmit\n\n",
+      "environment": {
+        "node": "v24.14.0",
+        "platform": "darwin",
+        "arch": "x64"
+      }
+    },
+    "visualEvidence": null,
+    "findings": {
+      "p0": 0,
+      "p1": 0,
+      "p2": 1
+    }
+  },
+  "visualEvidence": null,
+  "completedAt": "2026-08-16T04:19:54.185Z",
+  "metrics": {
+    "schemaVersion": 1,
+    "recordedAt": "2026-08-16T04:19:54.184Z",
+    "runId": "f002-t002-media-upload",
+    "task": "T-002",
+    "role": "backend",
+    "route": "sol",
+    "risk": "high",
+    "uiDevelopment": false,
+    "estimatedTokens": null,
+    "actualTokens": "unavailable",
+    "estimatedMinutes": null,
+    "actualDurationMs": 462160,
+    "validationFailures": 0,
+    "changedFiles": 6,
+    "verificationDurationMs": 3398,
+    "verificationExitCode": 0
+  }
+}

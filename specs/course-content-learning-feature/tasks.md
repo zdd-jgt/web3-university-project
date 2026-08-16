@@ -19,7 +19,7 @@
   - goal_required: no
   - rollback_or_blocker: 保留旧 VideoAsset 表与数据并前滚复制；新发布路径必须失败关闭。迁移必须在真实本地 PostgreSQL 上证明可应用。
 
-- [ ] T-002: 实现教师私有直传会话与服务端上传边界 ~1h
+- [x] T-002: 实现教师私有直传会话与服务端上传边界 ~1h
   - role: backend
   - depends_on: T-001
   - owned_paths: apps/api/src/media, apps/api/src/storage/storage-signer.ts, apps/api/src/app.module.ts, apps/api/test/media-upload.spec.ts

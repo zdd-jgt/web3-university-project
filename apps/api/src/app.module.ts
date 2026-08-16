@@ -7,6 +7,7 @@ import { CoursesModule } from "./courses/courses.module";
 import { EntitlementsModule } from "./entitlements/entitlements.module";
 import { HealthModule } from "./health/health.module";
 import { LearningModule } from "./learning/learning.module";
+import { MediaModule } from "./media/media.module";
 import { RateLimitGuard } from "./common/rate-limit.guard";
 import { PrismaModule } from "./prisma/prisma.module";
 import { StorageModule } from "./storage/storage.module";
@@ -23,6 +24,7 @@ import { UsersModule } from "./users/users.module";
     CoursesModule,
     CommentsModule,
     LearningModule,
+    MediaModule,
     CertificatesModule,
     HealthModule,
   ],

@@ -1,14 +1,31 @@
 import { getSignedUrl as getCloudFrontSignedUrl } from "@aws-sdk/cloudfront-signer";
-import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  GetObjectCommand,
+  HeadObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl as getS3SignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Injectable } from "@nestjs/common";
 import { Errors } from "../common/app-error";
 
 const URL_TTL_SECONDS = 5 * 60;
+const UPLOAD_TTL_SECONDS = 15 * 60;
 export type StorageAssetKind = "video" | "captions";
+
+export type StorageObjectHead = {
+  contentLength: bigint;
+  contentType: string | null;
+};
 
 export interface StorageSigner {
   signRead(objectKey: string, kind: StorageAssetKind): Promise<{ url: string; expiresAt: Date }>;
+  signWrite(
+    objectKey: string,
+    contentType: string,
+    contentLength: bigint,
+  ): Promise<{ url: string; expiresAt: Date; requiredHeaders: Record<string, string> }>;
+  head(objectKey: string): Promise<StorageObjectHead | null>;
 }
 
 export const STORAGE_SIGNER = Symbol("STORAGE_SIGNER");
@@ -52,6 +69,56 @@ export class S3StorageSigner implements StorageSigner {
     );
     return { url, expiresAt };
   }
+
+  async signWrite(objectKey: string, contentType: string, contentLength: bigint) {
+    validateObjectKey(objectKey);
+    if (
+      !contentType.trim() ||
+      contentLength <= 0n ||
+      contentLength > BigInt(Number.MAX_SAFE_INTEGER)
+    ) {
+      throw Errors.validation();
+    }
+    const expiresAt = new Date(Date.now() + UPLOAD_TTL_SECONDS * 1000);
+    const url = await getS3SignedUrl(
+      this.client,
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: objectKey,
+        ContentType: contentType,
+        ContentLength: Number(contentLength),
+      }),
+      { expiresIn: UPLOAD_TTL_SECONDS },
+    );
+    return {
+      url,
+      expiresAt,
+      requiredHeaders: {
+        "content-type": contentType,
+        "content-length": contentLength.toString(),
+      },
+    };
+  }
+
+  async head(objectKey: string): Promise<StorageObjectHead | null> {
+    validateObjectKey(objectKey);
+    try {
+      const result = await this.client.send(
+        new HeadObjectCommand({ Bucket: this.bucket, Key: objectKey }),
+      );
+      if (result.ContentLength === undefined || result.ContentLength < 0) {
+        throw Errors.unavailable();
+      }
+      return {
+        contentLength: BigInt(result.ContentLength),
+        contentType: result.ContentType?.trim().toLowerCase() ?? null,
+      };
+    } catch (error) {
+      if (isMissingObject(error)) return null;
+      if (error instanceof Error && error.name === "AppError") throw error;
+      throw Errors.unavailable();
+    }
+  }
 }
 
 @Injectable()
@@ -59,6 +126,7 @@ export class CloudFrontStorageSigner implements StorageSigner {
   private readonly baseURL: string;
   private readonly keyPairId: string;
   private readonly privateKey: string;
+  private readonly origin: S3StorageSigner;
 
   constructor() {
     const baseURL = process.env.CLOUDFRONT_MEDIA_URL?.trim().replace(/\/$/, "");
@@ -70,6 +138,7 @@ export class CloudFrontStorageSigner implements StorageSigner {
     this.baseURL = baseURL;
     this.keyPairId = keyPairId;
     this.privateKey = privateKey;
+    this.origin = new S3StorageSigner();
   }
 
   async signRead(objectKey: string, _kind: StorageAssetKind) {
@@ -83,6 +152,14 @@ export class CloudFrontStorageSigner implements StorageSigner {
       dateLessThan: expiresAt.toISOString(),
     });
     return { url, expiresAt };
+  }
+
+  signWrite(objectKey: string, contentType: string, contentLength: bigint) {
+    return this.origin.signWrite(objectKey, contentType, contentLength);
+  }
+
+  head(objectKey: string) {
+    return this.origin.head(objectKey);
   }
 }
 
@@ -106,4 +183,10 @@ function validateObjectKey(objectKey: string): void {
   ) {
     throw Errors.validation();
   }
+}
+
+function isMissingObject(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { name?: string; $metadata?: { httpStatusCode?: number } };
+  return candidate.$metadata?.httpStatusCode === 404 || candidate.name === "NotFound";
 }

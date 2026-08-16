@@ -19,17 +19,17 @@
 ## Ready Queue
 
 - Completed: F-001/T-001 through Harness run `f001-t001-api-publication-a4`.
-- User-prioritized ready task: F-002/T-001. Only one task may run at a time.
+- User-prioritized ready task: F-002/T-003. Only one task may run at a time.
 - Paused but still ready: F-001/T-002; its existing dependency chain is unchanged.
 - Waiting on dependencies: F-003 waits for F-002 feature review.
 
 ## Current Cursor
 
-- Run ID: `f002-t001-media-schema-a4` completed and Runner accepted
+- Run ID: `f002-t002-media-upload` completed and Runner accepted
 - Active feature: F-002 course-content-learning
-- Active task: none; F-002/T-001 completed and T-002 is ready
-- Last completed: T-001 with 19 passing API tests, API typecheck, Runner `accepted`, and Sol `PASS_WITH_NOTES` (`P0=0`, `P1=0`, `P2=3`)
-- Next action: start F-002/T-002 upload-session boundary
+- Active task: none; F-002/T-001 and T-002 completed, T-003 is ready
+- Last completed: T-002 with 26 passing API tests, 3 environment-gated schema tests skipped, API typecheck, Runner `accepted`, and Sol `PASS_WITH_NOTES` (`P0=0`, `P1=0`, `P2=1`)
+- Next action: start F-002/T-003 real-byte media processing with local FFmpeg and MinIO
 
 ## Global Gates
 
@@ -55,4 +55,5 @@
 - xj-ai may not bypass dependencies; only one heavy verification command runs at a time.
 - xj-review is the final arbiter.
 - This project explicitly opts into `harness-events-v1`; other projects remain on the legacy Runner mode unless they opt in themselves.
-- T-001 P2 backlog: real Nest HTTP Bearer Guard coverage, zero payout-wallet rejection, and strict historical `submissionHash` bytes32 validation.
+- T-001 P2 backlog: legacy `VideoAsset` coexistence and deferred learning-session behavior remain explicit migration debt.
+- T-002 P2 backlog: real MinIO presigned PUT-to-HEAD evidence is deferred to T-006 and may not be claimed from unit mocks.
