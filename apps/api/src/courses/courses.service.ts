@@ -20,8 +20,8 @@ export class CoursesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly teachers: TeachersService,
-    @Inject(ENTITLEMENT_READER) private readonly entitlements: EntitlementReader,
-    @Inject(STORAGE_SIGNER) private readonly storage: StorageSigner,
+    @Inject(ENTITLEMENT_READER) readonly _entitlements: EntitlementReader,
+    @Inject(STORAGE_SIGNER) readonly _storage: StorageSigner,
   ) {}
   async create(teacherId: string, dto: { title: string; description: string }) {
     await this.teachers.assertTeacher(teacherId);
@@ -252,31 +252,10 @@ export class CoursesService {
     });
   }
   async signVideo(userId: string, wallet: { address: string; chainId: number }, lessonId: string) {
-    const lesson = await this.prisma.lesson.findUnique({
-      where: { id: lessonId },
-      include: { course: true, asset: true },
-    });
-    if (
-      !lesson?.asset ||
-      !assetIsReady(lesson.asset) ||
-      lesson.asset.kind !== "VIDEO" ||
-      !lesson.asset.readyObjectKey
-    )
-      throw Errors.notFound();
-    if (!lesson.course.chainCourseId || !lesson.course.chainId) throw Errors.conflict();
-    if (wallet.chainId !== lesson.course.chainId) throw Errors.forbidden();
-    await this.entitlements.assertPurchased(
-      wallet.address,
-      lesson.course.chainId,
-      lesson.course.chainCourseId,
-    );
-    // userId deliberately participates only through authenticated principal; no body wallet/user field is accepted.
-    if (!userId) throw Errors.unauthenticated();
-    const media = await this.storage.signRead(lesson.asset.readyObjectKey, "video");
-    const captions = lesson.asset.captionsObjectKey
-      ? await this.storage.signRead(lesson.asset.captionsObjectKey, "captions")
-      : undefined;
-    return { ...media, captionsUrl: captions?.url };
+    void userId;
+    void wallet;
+    void lessonId;
+    throw Errors.conflict();
   }
   async ownedCourse(teacherId: string, courseId: string) {
     const course = await this.prisma.course.findFirst({ where: { id: courseId, teacherId } });

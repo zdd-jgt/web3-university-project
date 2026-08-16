@@ -1,9 +1,10 @@
 import { Module } from "@nestjs/common";
 import { LearningController } from "./learning.controller";
-import { LearningService } from "./learning.service";
+import { LEARNING_CLOCK, systemLearningClock } from "./learning-clock";
+import { LearningSessionsService } from "./learning-sessions.service";
 @Module({
-  providers: [LearningService],
+  providers: [LearningSessionsService, { provide: LEARNING_CLOCK, useValue: systemLearningClock }],
   controllers: [LearningController],
-  exports: [LearningService],
+  exports: [LearningSessionsService],
 })
 export class LearningModule {}

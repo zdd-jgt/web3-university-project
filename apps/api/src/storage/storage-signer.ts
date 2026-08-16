@@ -11,7 +11,14 @@ import { Errors } from "../common/app-error";
 
 const URL_TTL_SECONDS = 5 * 60;
 const UPLOAD_TTL_SECONDS = 15 * 60;
-export type StorageAssetKind = "video" | "captions";
+export type StorageAssetKind =
+  | "video"
+  | "captions"
+  | {
+      contentType: string;
+      disposition: "inline" | "attachment";
+      fileName: string;
+    };
 
 export type StorageObjectHead = {
   contentLength: bigint;
@@ -56,14 +63,15 @@ export class S3StorageSigner implements StorageSigner {
 
   async signRead(objectKey: string, kind: StorageAssetKind) {
     validateObjectKey(objectKey);
+    const response = readResponse(kind);
     const expiresAt = new Date(Date.now() + URL_TTL_SECONDS * 1000);
     const url = await getS3SignedUrl(
       this.client,
       new GetObjectCommand({
         Bucket: this.bucket,
         Key: objectKey,
-        ResponseContentType: contentTypeFor(kind),
-        ResponseContentDisposition: "inline",
+        ResponseContentType: response.contentType,
+        ResponseContentDisposition: response.contentDisposition,
       }),
       { expiresIn: URL_TTL_SECONDS },
     );
@@ -164,6 +172,7 @@ export class CloudFrontStorageSigner implements StorageSigner {
 }
 
 export function contentTypeFor(kind: StorageAssetKind): string {
+  if (typeof kind === "object") return kind.contentType;
   return kind === "captions" ? "text/vtt; charset=utf-8" : "video/mp4";
 }
 
@@ -183,6 +192,26 @@ function validateObjectKey(objectKey: string): void {
   ) {
     throw Errors.validation();
   }
+}
+
+function readResponse(kind: StorageAssetKind) {
+  if (typeof kind === "string") {
+    return { contentType: contentTypeFor(kind), contentDisposition: "inline" };
+  }
+  const contentType = kind.contentType.trim().toLowerCase();
+  const fileName = kind.fileName.normalize("NFKC").trim();
+  if (
+    !/^[a-z0-9][a-z0-9!#$&^_.+-]*\/[a-z0-9][a-z0-9!#$&^_.+-]*$/.test(contentType) ||
+    !fileName ||
+    fileName.length > 180 ||
+    /[\r\n/\\]/.test(fileName)
+  ) {
+    throw Errors.validation();
+  }
+  return {
+    contentType,
+    contentDisposition: `${kind.disposition}; filename*=UTF-8''${encodeURIComponent(fileName)}`,
+  };
 }
 
 function isMissingObject(error: unknown): boolean {

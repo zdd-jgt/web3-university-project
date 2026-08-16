@@ -57,7 +57,7 @@
   - goal_required: no
   - rollback_or_blocker: FFmpeg/ffprobe 或本地 MinIO 不可用时记录 BLOCKED；不得用 Mock 代替 AC-004 的真实字节证据。
 
-- [ ] T-004: 实现视频心跳会话、文档确认和唯一完课事务 ~1h
+- [x] T-004: 实现视频心跳会话、文档确认和唯一完课事务 ~1h
   - role: backend
   - depends_on: T-003
   - owned_paths: apps/api/src/learning, apps/api/src/courses/courses.service.ts, apps/api/src/storage/storage-signer.ts, apps/api/test/learning-sessions.spec.ts, apps/api/test/learning-postgres.integration.spec.ts
