@@ -94,7 +94,7 @@ export class CoursesService {
     return this.prisma.course.findMany({
       where: { teacherId },
       orderBy: { updatedAt: "desc" },
-      include: { lessons: { orderBy: { position: "asc" }, include: { video: true } } },
+      include: { lessons: { orderBy: { position: "asc" }, include: { asset: true } } },
     });
   }
   detail(id: string) {
@@ -104,7 +104,16 @@ export class CoursesService {
         include: {
           lessons: {
             orderBy: { position: "asc" },
-            include: { video: { select: { durationMs: true, status: true } } },
+            include: {
+              asset: {
+                select: {
+                  kind: true,
+                  durationMs: true,
+                  detectedMimeType: true,
+                  status: true,
+                },
+              },
+            },
           },
         },
       })
@@ -117,13 +126,14 @@ export class CoursesService {
     await this.teachers.assertTeacher(teacherId);
     const course = await this.prisma.course.findFirst({
       where: { id: courseId, teacherId },
-      include: { lessons: { orderBy: { position: "asc" }, include: { video: true } } },
+      include: { lessons: { orderBy: { position: "asc" }, include: { asset: true } } },
     });
     if (!course) throw Errors.notFound();
     if (course.status !== "DRAFT") throw Errors.conflict();
+    const requiredLessons = course.lessons.filter((lesson) => lesson.required);
     if (
-      !course.lessons.some((lesson) => lesson.required) ||
-      course.lessons.some((lesson) => !lesson.video)
+      requiredLessons.length === 0 ||
+      requiredLessons.some((lesson) => !assetIsReady(lesson.asset))
     ) {
       throw Errors.conflict();
     }
@@ -149,8 +159,12 @@ export class CoursesService {
         title: lesson.title,
         position: lesson.position,
         required: lesson.required,
-        durationMs: lesson.video?.durationMs ?? null,
-        hasCaptions: Boolean(lesson.video?.captionsObjectKey),
+        contentKind: lesson.asset?.kind ?? null,
+        durationMs: lesson.asset?.durationMs ?? null,
+        detectedMimeType: lesson.asset?.detectedMimeType ?? null,
+        sizeBytes: lesson.asset?.sizeBytes?.toString() ?? null,
+        sha256: lesson.asset?.sha256 ?? null,
+        hasCaptions: Boolean(lesson.asset?.captionsObjectKey),
       })),
     });
     const updated = await this.prisma.course.updateMany({
@@ -171,16 +185,13 @@ export class CoursesService {
   async review(adminId: string, courseId: string, approved: boolean) {
     const course = await this.prisma.course.findUnique({
       where: { id: courseId },
-      include: { lessons: { where: { required: true }, include: { video: true } } },
+      include: { lessons: { where: { required: true }, include: { asset: true } } },
     });
     if (!course) throw Errors.notFound();
     if (course.status !== "PENDING_REVIEW") throw Errors.conflict();
     if (
       approved &&
-      (course.lessons.length === 0 ||
-        course.lessons.some(
-          (lesson) => lesson.video?.status !== "READY" || !lesson.video.captionsObjectKey,
-        ))
+      (course.lessons.length === 0 || course.lessons.some((lesson) => !assetIsReady(lesson.asset)))
     ) {
       throw Errors.conflict();
     }
@@ -227,10 +238,13 @@ export class CoursesService {
     });
     if (!lesson || lesson.course.teacherId !== teacherId) throw Errors.notFound();
     if (lesson.course.status !== "DRAFT") throw Errors.conflict();
-    return this.prisma.videoAsset.create({
+    return this.prisma.lessonAsset.create({
       data: {
         lessonId,
-        objectKey: dto.objectKey.trim(),
+        kind: "VIDEO",
+        originalFileName: "legacy-upload.mp4",
+        sourceObjectKey: dto.objectKey.trim(),
+        declaredMimeType: "video/mp4",
         captionsObjectKey: dto.captionsObjectKey?.trim(),
         durationMs: dto.durationMs,
         status: "PROCESSING",
@@ -240,9 +254,15 @@ export class CoursesService {
   async signVideo(userId: string, wallet: { address: string; chainId: number }, lessonId: string) {
     const lesson = await this.prisma.lesson.findUnique({
       where: { id: lessonId },
-      include: { course: true, video: true },
+      include: { course: true, asset: true },
     });
-    if (lesson?.video?.status !== "READY") throw Errors.notFound();
+    if (
+      !lesson?.asset ||
+      !assetIsReady(lesson.asset) ||
+      lesson.asset.kind !== "VIDEO" ||
+      !lesson.asset.readyObjectKey
+    )
+      throw Errors.notFound();
     if (!lesson.course.chainCourseId || !lesson.course.chainId) throw Errors.conflict();
     if (wallet.chainId !== lesson.course.chainId) throw Errors.forbidden();
     await this.entitlements.assertPurchased(
@@ -252,9 +272,9 @@ export class CoursesService {
     );
     // userId deliberately participates only through authenticated principal; no body wallet/user field is accepted.
     if (!userId) throw Errors.unauthenticated();
-    const media = await this.storage.signRead(lesson.video.objectKey, "video");
-    const captions = lesson.video.captionsObjectKey
-      ? await this.storage.signRead(lesson.video.captionsObjectKey, "captions")
+    const media = await this.storage.signRead(lesson.asset.readyObjectKey, "video");
+    const captions = lesson.asset.captionsObjectKey
+      ? await this.storage.signRead(lesson.asset.captionsObjectKey, "captions")
       : undefined;
     return { ...media, captionsUrl: captions?.url };
   }
@@ -306,4 +326,29 @@ export function chainCourseIdFrom(courseId: string): string {
 
 function buildSubmissionHash(value: object): `0x${string}` {
   return keccak256(stringToHex(JSON.stringify(value)));
+}
+
+type PublicationAsset = {
+  kind: "VIDEO" | "DOCUMENT";
+  status: "UPLOADING" | "PROCESSING" | "READY" | "FAILED";
+  durationMs: number | null;
+  detectedMimeType: string | null;
+  sizeBytes: bigint | null;
+  sha256: string | null;
+  readyObjectKey: string | null;
+  captionsObjectKey: string | null;
+  readyAt: Date | null;
+};
+
+function assetIsReady(asset: PublicationAsset | null | undefined): asset is PublicationAsset {
+  return Boolean(
+    asset &&
+      asset.status === "READY" &&
+      asset.readyObjectKey &&
+      asset.detectedMimeType &&
+      asset.sha256 &&
+      (asset.sizeBytes ?? 0n) > 0n &&
+      asset.readyAt &&
+      (asset.kind === "DOCUMENT" || (asset.durationMs ?? 0) > 0),
+  );
 }

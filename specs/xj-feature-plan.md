@@ -25,11 +25,11 @@
 
 ## Current Cursor
 
-- Run ID: `f002-t001-media-schema-a4` pending after the tracked spec baseline is created
+- Run ID: `f002-t001-media-schema-a4` completed and Runner accepted
 - Active feature: F-002 course-content-learning
-- Active task: T-001 pending final Harness replay from tracked specs
+- Active task: none; F-002/T-001 completed and T-002 is ready
 - Last completed: T-001 with 19 passing API tests, API typecheck, Runner `accepted`, and Sol `PASS_WITH_NOTES` (`P0=0`, `P1=0`, `P2=3`)
-- Next action: create the local spec-only Git baseline, then start F-002/T-001 a4
+- Next action: start F-002/T-002 upload-session boundary
 
 ## Global Gates
 

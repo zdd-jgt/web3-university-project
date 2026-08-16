@@ -1,6 +1,6 @@
 # 课程内容上传与学习判定 Feature Tasks
 
-- [ ] T-001: 建立统一课时资产、媒体任务与学习完成数据库合同 ~1h
+- [x] T-001: 建立统一课时资产、媒体任务与学习完成数据库合同 ~1h
   - role: database
   - depends_on: none
   - owned_paths: apps/api/prisma/schema.prisma, apps/api/prisma/migrations/20260816120000_add_lesson_assets_and_learning_sessions/migration.sql, apps/api/src/courses/courses.service.ts, apps/api/src/learning/learning.service.ts, apps/api/test/course-workflow.spec.ts, apps/api/test/course-admin-publication.spec.ts, apps/api/test/media-schema.spec.ts

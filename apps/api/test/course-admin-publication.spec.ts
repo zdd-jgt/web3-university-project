@@ -12,6 +12,17 @@ const entitlements = {} as EntitlementReader;
 const storage = {} as StorageSigner;
 const admin = { role: "ADMIN" } as Principal;
 const student = { role: "STUDENT" } as Principal;
+const readyVideoAsset = {
+  kind: "VIDEO",
+  status: "READY",
+  durationMs: 60_000,
+  detectedMimeType: "video/mp4",
+  sizeBytes: 1024n,
+  sha256: "a".repeat(64),
+  readyObjectKey: "ready/course-1/video.mp4",
+  captionsObjectKey: null,
+  readyAt: new Date("2026-08-16T00:00:00.000Z"),
+};
 
 function approvedCourse() {
   return {
@@ -70,7 +81,7 @@ describe("course admin publication contracts", () => {
     const pendingCourse = {
       ...approvedCourse(),
       status: "PENDING_REVIEW",
-      lessons: [{ video: { status: "READY", captionsObjectKey: "captions/course-1.vtt" } }],
+      lessons: [{ asset: readyVideoAsset }],
     };
     const approved = { ...pendingCourse, status: "APPROVED" };
     const findUnique = vi.fn().mockResolvedValueOnce(pendingCourse).mockResolvedValueOnce(approved);
@@ -110,7 +121,7 @@ describe("course admin publication contracts", () => {
     const pendingCourse = {
       ...approvedCourse(),
       status: "PENDING_REVIEW",
-      lessons: [{ video: { status: "READY", captionsObjectKey: "captions/course-1.vtt" } }],
+      lessons: [{ asset: readyVideoAsset }],
     };
     for (const chainId of [undefined, "not-a-number", "0"]) {
       if (chainId === undefined) delete process.env.CHAIN_ID;

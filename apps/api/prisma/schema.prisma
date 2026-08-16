@@ -29,6 +29,31 @@ enum AssetStatus {
   PROCESSING
   FAILED
 }
+enum LessonAssetStatus {
+  UPLOADING
+  PROCESSING
+  READY
+  FAILED
+}
+enum LessonContentKind {
+  VIDEO
+  DOCUMENT
+}
+enum MediaJobStatus {
+  PENDING
+  PROCESSING
+  DELIVERED
+  FAILED
+}
+enum LearningSessionStatus {
+  ACTIVE
+  COMPLETED
+  EXPIRED
+}
+enum LessonCompletionMethod {
+  VIDEO_COVERAGE
+  DOCUMENT_CONFIRM
+}
 enum CertificateStatus {
   PENDING
   MINTING
@@ -55,6 +80,8 @@ model User {
   comments Comment[]
   learningEvents LearningEvent[]
   segments LearningSegment[]
+  learningSessions LearningSession[]
+  lessonCompletions LessonCompletion[]
   completions CourseCompletion[]
   wallets Wallet[]
 }
@@ -68,6 +95,8 @@ model Wallet {
   isPrimary Boolean @default(false)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   completions CourseCompletion[]
+  learningSessions LearningSession[]
+  lessonCompletions LessonCompletion[]
   @@unique([chainId, address])
   @@index([userId, isPrimary])
 }
@@ -179,8 +208,11 @@ model Lesson {
   createdAt DateTime @default(now())
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
   video VideoAsset?
+  asset LessonAsset?
   events LearningEvent[]
   segments LearningSegment[]
+  learningSessions LearningSession[]
+  completions LessonCompletion[]
   @@unique([courseId, position])
 }
 
@@ -193,6 +225,86 @@ model VideoAsset {
   status AssetStatus @default(PROCESSING)
   createdAt DateTime @default(now())
   lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+}
+
+model LessonAsset {
+  id String @id @default(cuid())
+  lessonId String @unique
+  kind LessonContentKind
+  originalFileName String
+  sourceObjectKey String @unique
+  readyObjectKey String? @unique
+  declaredMimeType String
+  detectedMimeType String?
+  sizeBytes BigInt?
+  sha256 String?
+  captionsObjectKey String? @unique
+  durationMs Int?
+  status LessonAssetStatus @default(UPLOADING)
+  uploadExpiresAt DateTime?
+  processingStartedAt DateTime?
+  readyAt DateTime?
+  failureCode String?
+  version Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  processJob MediaProcessJob?
+  learningSessions LearningSession[]
+}
+
+model MediaProcessJob {
+  id String @id @default(cuid())
+  assetId String @unique
+  status MediaJobStatus @default(PENDING)
+  attempts Int @default(0)
+  availableAt DateTime @default(now())
+  leaseOwner String?
+  leaseExpiresAt DateTime?
+  lastError String?
+  deliveredAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  asset LessonAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  @@index([status, availableAt, leaseExpiresAt])
+}
+
+model LearningSession {
+  id String @id @default(cuid())
+  userId String
+  buyerWalletId String
+  lessonId String
+  assetId String
+  kind LessonContentKind
+  status LearningSessionStatus @default(ACTIVE)
+  expiresAt DateTime
+  lastSequence Int @default(0)
+  lastPositionMs Int @default(0)
+  lastHeartbeatAt DateTime?
+  accessedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  buyerWallet Wallet @relation(fields: [buyerWalletId], references: [id], onDelete: Restrict)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  asset LessonAsset @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  events LearningEvent[]
+  @@index([userId, lessonId, status, expiresAt])
+  @@index([buyerWalletId, status, expiresAt])
+}
+
+model LessonCompletion {
+  id String @id @default(cuid())
+  userId String
+  buyerWalletId String
+  lessonId String
+  method LessonCompletionMethod
+  completedAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  buyerWallet Wallet @relation(fields: [buyerWalletId], references: [id], onDelete: Restrict)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  @@unique([userId, lessonId])
+  @@index([buyerWalletId, lessonId])
 }
 
 model Comment {
@@ -217,12 +329,16 @@ model LearningEvent {
   userId String
   lessonId String
   idempotencyKey String
+  sessionId String?
+  sequence Int?
   startMs Int
   endMs Int
   createdAt DateTime @default(now())
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  session LearningSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   @@unique([userId, idempotencyKey])
+  @@unique([sessionId, sequence])
   @@index([userId, lessonId, createdAt])
 }
 

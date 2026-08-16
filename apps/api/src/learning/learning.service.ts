@@ -24,8 +24,9 @@ export class LearningService {
           where: { required: true },
           orderBy: { position: "asc" },
           include: {
-            video: true,
+            asset: true,
             segments: { where: { userId }, select: { startMs: true, endMs: true } },
+            completions: { where: { userId }, select: { id: true } },
           },
         },
       },
@@ -35,12 +36,17 @@ export class LearningService {
     if (wallet.chainId !== course.chainId) throw Errors.forbidden();
     await this.entitlements.assertPurchased(wallet.address, course.chainId, course.chainCourseId);
     const lessons = course.lessons.map((lesson) => {
-      const durationMs = lesson.video?.durationMs ?? 0;
+      const durationMs = lesson.asset?.durationMs ?? 0;
       const watchedMs = Math.min(coveredMs(lesson.segments), durationMs);
-      const complete = durationMs > 0 && isLessonComplete(lesson.segments, durationMs);
+      const complete =
+        lesson.completions.length > 0 ||
+        (lesson.asset?.kind === "VIDEO" &&
+          durationMs > 0 &&
+          isLessonComplete(lesson.segments, durationMs));
       return {
         lessonId: lesson.id,
         position: lesson.position,
+        contentKind: lesson.asset?.kind ?? null,
         watchedMs,
         durationMs,
         percentage: durationMs > 0 ? Math.min(100, Math.floor((watchedMs * 100) / durationMs)) : 0,
@@ -60,10 +66,12 @@ export class LearningService {
   async record(userId: string, wallet: ActiveWallet, lessonId: string, input: ProgressInput) {
     const lesson = await this.prisma.lesson.findUnique({
       where: { id: lessonId },
-      include: { course: true, video: true },
+      include: { course: true, asset: true },
     });
-    if (lesson?.video?.status !== "READY") throw Errors.notFound();
-    if (input.endMs > lesson.video.durationMs || input.endMs - input.startMs > 120_000)
+    if (lesson?.asset?.status !== "READY" || lesson.asset.kind !== "VIDEO") throw Errors.notFound();
+    const durationMs = lesson.asset.durationMs ?? 0;
+    if (durationMs <= 0) throw Errors.conflict();
+    if (input.endMs > durationMs || input.endMs - input.startMs > 120_000)
       throw Errors.validation();
     if (!lesson.course.chainCourseId || !lesson.course.chainId) throw Errors.conflict();
     if (wallet.chainId !== lesson.course.chainId) throw Errors.forbidden();
@@ -107,6 +115,18 @@ export class LearningService {
         await tx.learningSegment.createMany({
           data: normalized.map((segment) => ({ userId, lessonId, ...segment })),
         });
+        if (isLessonComplete(normalized, durationMs)) {
+          await tx.lessonCompletion.upsert({
+            where: { userId_lessonId: { userId, lessonId } },
+            create: {
+              userId,
+              buyerWalletId: wallet.id,
+              lessonId,
+              method: "VIDEO_COVERAGE",
+            },
+            update: {},
+          });
+        }
         const completion = await this.maybeCreateCompletion(tx, userId, wallet, lesson.courseId);
         return { eventId: event.id, replayed: false, coveredMs: coveredMs(normalized), completion };
       });
@@ -135,17 +155,33 @@ export class LearningService {
     const lessons = await tx.lesson.findMany({
       where: { courseId, required: true },
       include: {
-        video: true,
+        asset: true,
         segments: { where: { userId }, select: { startMs: true, endMs: true } },
+        completions: { where: { userId }, select: { id: true } },
       },
     });
-    if (
-      lessons.length === 0 ||
-      lessons.some(
-        (lesson) => !lesson.video || !isLessonComplete(lesson.segments, lesson.video.durationMs),
-      )
-    )
-      return await this.completionStatus(tx, userId, courseId);
+    if (lessons.length === 0) return await this.completionStatus(tx, userId, courseId);
+    for (const lesson of lessons) {
+      if (lesson.completions.length > 0) continue;
+      const durationMs = lesson.asset?.durationMs ?? 0;
+      if (
+        lesson.asset?.kind !== "VIDEO" ||
+        durationMs <= 0 ||
+        !isLessonComplete(lesson.segments, durationMs)
+      ) {
+        return await this.completionStatus(tx, userId, courseId);
+      }
+      await tx.lessonCompletion.upsert({
+        where: { userId_lessonId: { userId, lessonId: lesson.id } },
+        create: {
+          userId,
+          buyerWalletId: wallet.id,
+          lessonId: lesson.id,
+          method: "VIDEO_COVERAGE",
+        },
+        update: {},
+      });
+    }
     const existing = await tx.courseCompletion.findFirst({
       where: { courseId, OR: [{ userId }, { buyerWalletId: wallet.id }] },
       select: { id: true, status: true },
