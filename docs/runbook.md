@@ -92,3 +92,18 @@ two independent liquidity positions, verify test-token addresses, and obtain
 separate approval for deployment, keys, RPC/cloud accounts, and any operation
 that may cost money. The displayed `1 Test USDT = 10 YD` ratio is only an
 intended initial pool ratio until both sides are funded and the pool is created.
+
+The swap page uses these public Sepolia contracts:
+
+- Uniswap v4 Universal Router 2.1.1:
+  `0x7dfd4f31be6814d2906bde155c3e1b146eac1468`
+- v4 Quoter: `0x61b3f2011a92d183c7dbadbda940a7555ccf9227`
+- StateView: `0xe1dd9c3fa50edb962e442f60dfbc432e24537e4c`
+- Permit2: `0x000000000022D473030F116dDEE9F6B43aC78BA3`
+- Tether WDK Test USD₮:
+  `0xd077a400968890eacc75cdc901f0356c943e4fdb` (6 decimals)
+
+Set `VITE_SEPOLIA_RPC_URL` and the deployed `VITE_YD_TOKEN_ADDRESS` to enable
+public quotes. This does not create either pool. Follow
+[`uniswap-v4-pool-plan.md`](uniswap-v4-pool-plan.md) and obtain explicit asset
+amount approval before initializing or funding positions.

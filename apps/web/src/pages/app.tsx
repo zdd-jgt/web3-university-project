@@ -18,6 +18,7 @@ import { formatUnits, type Hash } from "viem";
 import { usePublicClient, useReadContract, useSignTypedData, useWriteContract } from "wagmi";
 import { AppShell, PageIntro, ProfileChip } from "../components/layout";
 import { Button, Card, Field, Status } from "../components/ui";
+import { SwapPage } from "../features/swap/SwapPage";
 import { type ApiCourseDetail, useUniversityApi } from "../lib/api";
 import {
   certificateSbtAbi,
@@ -663,90 +664,6 @@ function walletErrorMessage(error: unknown): string {
     }
   }
   return "The wallet operation did not complete. Verify Sepolia, balance and contract status, then retry.";
-}
-
-function Swap() {
-  const [asset, setAsset] = useState("Test USDT");
-  const [amount, setAmount] = useState("100");
-  const [slippage, setSlippage] = useState("0.5");
-  const numericAmount = Number(amount);
-  const slippageValue = Number(slippage);
-  const slippageValid = Number.isFinite(slippageValue) && slippageValue >= 0 && slippageValue <= 50;
-  const valid = Number.isFinite(numericAmount) && numericAmount > 0 && slippageValid;
-  const quote = valid ? (asset === "Test USDT" ? numericAmount * 10 : numericAmount * 2_850) : 0;
-  const minimum = quote * (1 - slippageValue / 100);
-  return (
-    <div className="page narrow">
-      <PageIntro eyebrow="TESTNET SWAP" title="Exchange test assets for YD.">
-        Quotes are illustrative until a configured on-chain adapter reads the selected pool. Do not
-        use this demo as a price feed.
-      </PageIntro>
-      <Card className="swap-card">
-        <label className="select-field" htmlFor="pay-asset">
-          You pay
-          <select id="pay-asset" value={asset} onChange={(event) => setAsset(event.target.value)}>
-            <option>Test USDT</option>
-            <option>SepoliaETH</option>
-          </select>
-        </label>
-        <Field
-          label={`Amount in ${asset}`}
-          id="swap-amount"
-          inputMode="decimal"
-          value={amount}
-          onChange={(event) => setAmount(event.target.value)}
-          error={numericAmount > 0 ? undefined : "Enter an amount greater than zero."}
-        />
-        <div className="swap-arrow" aria-hidden="true">
-          <ArrowDownUp />
-        </div>
-        <div className="quote-output">
-          <span>You receive</span>
-          <strong>{valid ? quote.toFixed(2) : "—"} YD</strong>
-          <small>Illustrative quote · expires in 01:42</small>
-        </div>
-        <dl className="quote-details">
-          <div>
-            <dt>Rate</dt>
-            <dd>{asset === "Test USDT" ? "1 Test USDT = 10 YD" : "1 SepoliaETH = 2,850 YD"}</dd>
-          </div>
-          <div>
-            <dt>Slippage tolerance</dt>
-            <dd>
-              <label>
-                <input
-                  aria-label="Slippage tolerance percent"
-                  value={slippage}
-                  onChange={(event) => setSlippage(event.target.value)}
-                />
-                %
-              </label>
-            </dd>
-          </div>
-          <div>
-            <dt>Minimum received</dt>
-            <dd>{valid ? minimum.toFixed(2) : "—"} YD</dd>
-          </div>
-          <div>
-            <dt>Deadline</dt>
-            <dd>2 minutes after submit</dd>
-          </div>
-        </dl>
-        {!slippageValid && (
-          <p className="error" role="alert">
-            Use a slippage tolerance between 0% and 50%.
-          </p>
-        )}
-        <Button disabled type="button">
-          Uniswap route unavailable
-        </Button>
-        <p className="fine-print">
-          Test assets have no value. Test USDT and SepoliaETH are two illustrative inputs only; no
-          Uniswap router or token approval is configured, so swapping is disabled.
-        </p>
-      </Card>
-    </div>
-  );
 }
 
 function Learn() {
@@ -1430,7 +1347,7 @@ export function App() {
         <Route path="/courses" element={<Courses />} />
         <Route path="/courses/:id" element={<CourseDetail />} />
         <Route path="/courses/:id/checkout" element={<Checkout />} />
-        <Route path="/swap" element={<Swap />} />
+        <Route path="/swap" element={<SwapPage />} />
         <Route path="/learn/:id" element={<Learn />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/teacher" element={<Teacher />} />

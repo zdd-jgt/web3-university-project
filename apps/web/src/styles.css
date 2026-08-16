@@ -799,6 +799,30 @@ input {
   padding: 4px;
   text-align: right;
 }
+.warning-callout {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 12px;
+  color: #ffd28d;
+  background: #3a2b1238;
+  border: 1px solid #a97732;
+  border-radius: 8px;
+}
+.text-link {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  color: #c6b5ff;
+}
+.spin {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 .learning-layout {
   min-height: calc(100vh - 43px);
   display: grid;

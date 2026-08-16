@@ -108,3 +108,35 @@ The two pools are independent. The initial Test USDT ratio is `1 Test USDT =
 10 YD`; a pool needs both assets and liquidity before it can trade. The
 Chainlink wrapper is isolated because ETH/USD cannot observe lesson progress or
 define YD's market price.
+
+### Student swap transaction
+
+```mermaid
+sequenceDiagram
+  actor Student
+  participant Web
+  participant TestUSDT as Test USDT
+  participant Permit2
+  participant Quoter as v4 Quoter / StateView
+  participant Router as Universal Router 2.1.1
+  participant Pool as v4 PoolManager
+
+  Student->>Web: Enter input and slippage
+  Web->>Quoter: eth_call exact-input quote + current slot0
+  Quoter-->>Web: amountOut, gas estimate, sqrtPriceX96
+  Web-->>Student: Quote, price impact, minimum output, 20-minute rule
+  alt Test USDT input
+    Student->>TestUSDT: approve(Permit2, exact input)
+    Student->>Permit2: approve(Router, exact input, 1-hour expiry)
+  else Native SepoliaETH input
+    Note over Student,Web: No ERC-20 approve
+  end
+  Web->>Quoter: Re-read fresh quote before write
+  Student->>Router: execute(V4_SWAP, minimumOut, deadline)
+  Router->>Pool: Swap exact input
+  Pool-->>Student: YD or revert atomically
+```
+
+The browser never invents an exchange rate. A missing pool, missing liquidity,
+wrong network, missing YD address, failed quote, incomplete authorization, stale
+deadline, or violated minimum output stops the write or makes it revert.

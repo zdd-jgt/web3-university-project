@@ -148,7 +148,10 @@ WITH held_outbox AS (
   RETURNING "completionId"
 )
 UPDATE "CourseCompletion" AS completion
-SET status = CASE WHEN completion.status = 'MINTED' THEN 'MINTED' ELSE 'PENDING' END,
+SET status = CASE
+      WHEN completion.status = 'MINTED' THEN 'MINTED'::"CertificateStatus"
+      ELSE 'PENDING'::"CertificateStatus"
+    END,
     "txHash" = CASE WHEN completion.status = 'MINTED' THEN completion."txHash" ELSE NULL END,
     "updatedAt" = sqlc.arg(now_at)
 FROM held_outbox
