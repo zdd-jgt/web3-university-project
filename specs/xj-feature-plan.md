@@ -13,20 +13,23 @@
 | ID | Feature | Status | Depends on | Ready when | Risk | QA | Review | Completion criteria |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | F-001 | `specs/local-course-publication-feature` | ready | none | Git baseline and XJ Harness are valid | high | QA-3 | required | AC-001 through AC-009 have evidence and feature review passes |
+| F-002 | `specs/course-content-learning-feature` | ready | none | User confirmed local-only development and document completion rule | high | QA-3 | required | AC-001 through AC-012 have local evidence and feature review passes |
+| F-003 | `specs/certificate-delivery-reliability-feature` | waiting | F-002 | F-002 feature review passes | high | QA-3 | required | AC-001 through AC-008 have local evidence and feature review passes |
 
 ## Ready Queue
 
 - Completed: F-001/T-001 through Harness run `f001-t001-api-publication-a4`.
-- Ready next but not started: T-002; Docker-backed Foundry cannot run until Docker Desktop is running.
-- Waiting on dependencies: T-003 through T-006 follow the dependency chain in `tasks.md`.
+- User-prioritized ready task: F-002/T-001. Only one task may run at a time.
+- Paused but still ready: F-001/T-002; its existing dependency chain is unchanged.
+- Waiting on dependencies: F-003 waits for F-002 feature review.
 
 ## Current Cursor
 
-- Run ID: `f001-t001-api-publication-a4` completed
-- Active feature: F-001 local-course-publication
-- Active task: none; T-001 completed and T-002 has not started
+- Run ID: `f002-t001-media-schema-a4` pending after the tracked spec baseline is created
+- Active feature: F-002 course-content-learning
+- Active task: T-001 pending final Harness replay from tracked specs
 - Last completed: T-001 with 19 passing API tests, API typecheck, Runner `accepted`, and Sol `PASS_WITH_NOTES` (`P0=0`, `P1=0`, `P2=3`)
-- Next action: pause at the T-001 boundary; start T-002 only after Docker Desktop is available and the user asks to continue
+- Next action: create the local spec-only Git baseline, then start F-002/T-001 a4
 
 ## Global Gates
 
@@ -36,6 +39,8 @@
 - External API: none required.
 - Browser / visual: not part of F-001; administrator browser signing is the next feature.
 - Deployment: local Anvil only; Sepolia and cloud deployment remain unapproved.
+- Upload processing: local MinIO and local FFmpeg/ffprobe only; no AWS or paid media service.
+- Resource policy: strictly sequential focused checks; actual token count is recorded as `unavailable` when the Harness cannot observe it.
 
 ## Blockers
 
@@ -45,8 +50,8 @@
 
 ## Notes
 
-- F-002 will add the real administrator browser review and wallet-signing flow after F-001 proves the chain/database invariant.
-- Purchase, learning progress, certificate minting and swap remain later independent features.
+- The earlier note reserving F-002 for administrator signing is superseded by the user's explicit reprioritization; administrator signing remains a future unnumbered feature.
+- Purchase and swap remain independent features; F-002/F-003 cover learning content and automatic certificate delivery only.
 - xj-ai may not bypass dependencies; only one heavy verification command runs at a time.
 - xj-review is the final arbiter.
 - This project explicitly opts into `harness-events-v1`; other projects remain on the legacy Runner mode unless they opt in themselves.

@@ -1,0 +1,100 @@
+# 自动铸证可靠性与失败队列 Feature Tasks
+
+- [ ] T-001: 增加广播时效事实并修复 Worker dropped/pending-unknown 状态机 ~1h
+  - role: backend
+  - depends_on: none
+  - owned_paths: apps/api/prisma/schema.prisma, apps/api/prisma/migrations/20260816150000_add_certificate_broadcast_tracking/migration.sql, services/worker/internal/worker, services/worker/internal/storage/queries/outbox.sql, services/worker/internal/storage/sqlc
+  - shared_files: none
+  - risk: high
+  - qa_level: QA-3
+  - review_required: yes
+  - acceptance: AC-001, AC-002, AC-003, AC-007
+  - test_cases: TC-001, TC-002, TC-003
+  - verify: worker-certificate-reliability
+  - review_verify: worker-vet
+  - visual_required: no
+  - agent_route: sol
+  - estimated_tokens: 10000
+  - estimated_time: 1h
+  - goal_required: no
+  - rollback_or_blocker: 当前 Worker SQL 有预存修复 diff，启动前必须 adopt 或隔离；真实 PostgreSQL测试不可跳过。
+
+- [ ] T-002: 实现管理员失败任务查询与幂等重试 API ~1h
+  - role: backend
+  - depends_on: T-001
+  - owned_paths: apps/api/src/certificates, apps/api/src/app.module.ts, apps/api/test/certificate-admin.spec.ts
+  - shared_files: apps/api/prisma/schema.prisma
+  - risk: high
+  - qa_level: QA-3
+  - review_required: yes
+  - acceptance: AC-004, AC-005
+  - test_cases: TC-004, TC-005
+  - verify: api-certificate-admin
+  - review_verify: api-typecheck
+  - visual_required: no
+  - agent_route: sol
+  - estimated_tokens: 8000
+  - estimated_time: 1h
+  - goal_required: no
+  - rollback_or_blocker: API 不得直接广播交易或接收链事实覆盖字段。
+
+- [ ] T-003: 接通管理员失败队列页面 ~1h
+  - role: frontend
+  - depends_on: T-002
+  - owned_paths: apps/web/src/features/certificate-jobs, apps/web/src/lib/api.ts, apps/web/src/pages/app.tsx, apps/web/src/styles.css, apps/web/src/test/setup.ts
+  - shared_files: none
+  - risk: medium
+  - qa_level: QA-2
+  - review_required: yes
+  - acceptance: AC-006
+  - test_cases: TC-006
+  - verify: web-certificate-admin
+  - review_verify: web-typecheck
+  - ui_mode: standard
+  - design_source: none
+  - visual_required: yes
+  - baseline_action: test
+  - mobile_required: no
+  - agent_route: terra-frontend
+  - estimated_tokens: 7000
+  - estimated_time: 1h
+  - goal_required: yes
+  - rollback_or_blocker: web 预存改动必须先通过 adopt；不得在未登录 ADMIN 时暴露任务信息。
+
+- [ ] T-004: 运行 PostgreSQL到Anvil的自动铸证与失败恢复 E2E ~1h
+  - role: qa
+  - depends_on: T-003
+  - owned_paths: infra/scripts/local-certificate-e2e.sh, services/worker/internal/worker/certificate_e2e_test.go
+  - shared_files: none
+  - risk: high
+  - qa_level: QA-3
+  - review_required: yes
+  - acceptance: AC-007, AC-008
+  - test_cases: TC-007, TC-008
+  - verify: local-certificate-e2e
+  - review_verify: contracts-format
+  - visual_required: no
+  - agent_route: sol
+  - estimated_tokens: 9000
+  - estimated_time: 1h
+  - goal_required: no
+  - rollback_or_blocker: Docker/Anvil不可用即 BLOCKED；只使用本地开发密钥和无价值资产。
+
+- [ ] T-005: 记录本地证据、生产限制与回退说明 ~30min
+  - role: general
+  - depends_on: T-004
+  - owned_paths: docs/runbook.md, docs/status.md
+  - shared_files: none
+  - risk: low
+  - qa_level: QA-1
+  - review_required: yes
+  - acceptance: AC-008
+  - test_cases: TC-009
+  - verify: repo-check
+  - review_verify: repo-typecheck
+  - visual_required: no
+  - agent_route: luna
+  - estimated_tokens: 3000
+  - estimated_time: 30min
+  - goal_required: no
+  - rollback_or_blocker: docs 有预存改动，启动前必须 adopt；不得把本地结果写成 Sepolia/生产验证。

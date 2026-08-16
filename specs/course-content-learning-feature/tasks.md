@@ -1,0 +1,125 @@
+# 课程内容上传与学习判定 Feature Tasks
+
+- [ ] T-001: 建立统一课时资产、媒体任务与学习完成数据库合同 ~1h
+  - role: database
+  - depends_on: none
+  - owned_paths: apps/api/prisma/schema.prisma, apps/api/prisma/migrations/20260816120000_add_lesson_assets_and_learning_sessions/migration.sql, apps/api/src/courses/courses.service.ts, apps/api/src/learning/learning.service.ts, apps/api/test/course-workflow.spec.ts, apps/api/test/course-admin-publication.spec.ts, apps/api/test/media-schema.spec.ts
+  - shared_files: none
+  - risk: high
+  - qa_level: QA-3
+  - review_required: yes
+  - acceptance: AC-001, AC-006, AC-010
+  - test_cases: TC-001, TC-002, TC-003
+  - verify: api-media-schema
+  - review_verify: api-typecheck
+  - visual_required: no
+  - agent_route: sol
+  - estimated_tokens: 9000
+  - estimated_time: 1h
+  - goal_required: no
+  - rollback_or_blocker: 保留旧 VideoAsset 表与数据并前滚复制；新发布路径必须失败关闭。迁移必须在真实本地 PostgreSQL 上证明可应用。
+
+- [ ] T-002: 实现教师私有直传会话与服务端上传边界 ~1h
+  - role: backend
+  - depends_on: T-001
+  - owned_paths: apps/api/src/media, apps/api/src/storage/storage-signer.ts, apps/api/src/app.module.ts, apps/api/test/media-upload.spec.ts
+  - shared_files: apps/api/prisma/schema.prisma
+  - risk: high
+  - qa_level: QA-3
+  - review_required: yes
+  - acceptance: AC-002, AC-003
+  - test_cases: TC-004, TC-005, TC-006
+  - verify: api-media-upload
+  - review_verify: api-typecheck
+  - visual_required: no
+  - agent_route: sol
+  - estimated_tokens: 9000
+  - estimated_time: 1h
+  - goal_required: no
+  - rollback_or_blocker: 不得接受客户端 objectKey 或 READY 字段；若 MinIO presign 无法限制约定 headers，必须在 finalize 重新校验并记录限制。
+
+- [ ] T-003: 实现 FFmpeg/文档验真媒体处理进程与失败恢复 ~1h
+  - role: backend
+  - depends_on: T-002
+  - owned_paths: apps/api/src/media-worker, apps/api/src/media, apps/api/package.json, infra/media, apps/api/test/media-processing.spec.ts
+  - shared_files: pnpm-lock.yaml
+  - risk: high
+  - qa_level: QA-3
+  - review_required: yes
+  - acceptance: AC-003, AC-004, AC-005
+  - test_cases: TC-007, TC-008, TC-009
+  - verify: api-media-processing
+  - review_verify: api-typecheck
+  - visual_required: no
+  - agent_route: sol
+  - estimated_tokens: 10000
+  - estimated_time: 1h
+  - goal_required: no
+  - rollback_or_blocker: FFmpeg/ffprobe 或本地 MinIO 不可用时记录 BLOCKED；不得用 Mock 代替 AC-004 的真实字节证据。
+
+- [ ] T-004: 实现视频心跳会话、文档确认和唯一完课事务 ~1h
+  - role: backend
+  - depends_on: T-003
+  - owned_paths: apps/api/src/learning, apps/api/src/courses/courses.service.ts, apps/api/test/learning-sessions.spec.ts, apps/api/test/learning-postgres.integration.spec.ts
+  - shared_files: apps/api/prisma/schema.prisma
+  - risk: high
+  - qa_level: QA-3
+  - review_required: yes
+  - acceptance: AC-007, AC-008, AC-009, AC-010
+  - test_cases: TC-010, TC-011, TC-012, TC-013
+  - verify: api-learning
+  - review_verify: api-typecheck
+  - visual_required: no
+  - agent_route: sol
+  - estimated_tokens: 10000
+  - estimated_time: 1h
+  - goal_required: no
+  - rollback_or_blocker: 需要真实 PostgreSQL 证明并发唯一性；若测试被跳过则任务不能完成。
+
+- [ ] T-005: 接通桌面教师上传与学生视频/文档学习界面 ~1h
+  - role: frontend
+  - depends_on: T-004
+  - owned_paths: apps/web/src/features/course-content, apps/web/src/lib/api.ts, apps/web/src/pages/app.tsx, apps/web/src/styles.css, apps/web/src/test/setup.ts
+  - shared_files: none
+  - risk: medium
+  - qa_level: QA-2
+  - review_required: yes
+  - acceptance: AC-011
+  - test_cases: TC-014, TC-015
+  - verify: web-learning-content
+  - review_verify: web-typecheck
+  - ui_mode: standard
+  - design_source: none
+  - visual_required: yes
+  - baseline_action: test
+  - mobile_required: no
+  - agent_route: terra-frontend
+  - estimated_tokens: 9000
+  - estimated_time: 1h
+  - goal_required: yes
+  - rollback_or_blocker: 当前 web 文件已有未提交 Uniswap 改动，启动前必须显式 adopt 或把本 task 标为 BLOCKED，不能混入既有 diff。
+
+- [ ] T-006: 串行验证本地 MinIO/FFmpeg/PostgreSQL 学习闭环并收口证据 ~1h
+  - role: qa
+  - depends_on: T-005
+  - owned_paths: infra/scripts/local-learning-content-e2e.sh, docs/runbook.md, docs/status.md
+  - shared_files: none
+  - risk: high
+  - qa_level: QA-3
+  - review_required: yes
+  - acceptance: AC-012
+  - test_cases: TC-016, TC-017
+  - verify: local-learning-content-e2e
+  - review_verify: repo-typecheck
+  - visual_required: no
+  - agent_route: sol
+  - estimated_tokens: 8000
+  - estimated_time: 1h
+  - goal_required: no
+  - rollback_or_blocker: 只启动必要本地进程并在结束后清理；docs 已有预存改动，启动前必须显式 adopt 或隔离范围。
+
+## 执行规则
+
+- 严格 T-001 到 T-006 串行；每个任务完成 review 和 Runner 收口后才进入下一个。
+- 重型命令一次只运行一条，先聚焦测试，再类型检查，再按风险运行更广回归。
+- Harness 无法读取真实 token 时写 `unavailable`；每个任务保留估算、耗时、重试和命令证据。
