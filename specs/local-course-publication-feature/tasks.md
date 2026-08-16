@@ -1,6 +1,6 @@
 # Local Course Publication Feature Tasks
 
-- [ ] T-001: Add recoverable ADMIN publication contracts to the course API ~30min
+- [x] T-001: Add recoverable ADMIN publication contracts to the course API ~30min
   - role: backend
   - depends_on: none
   - owned_paths: apps/api/src/courses/courses.controller.ts, apps/api/src/courses/courses.service.ts, apps/api/test/course-workflow.spec.ts, apps/api/test/course-admin-publication.spec.ts

@@ -16,17 +16,17 @@
 
 ## Ready Queue
 
-- Ready now: execute F-001/T-001.
-- Waiting on dependencies: T-002 through T-006 follow the dependency chain in `tasks.md`.
-- Blocked: Docker-backed Foundry, PostgreSQL and Anvil checks cannot run until Docker Desktop is running.
+- Completed: F-001/T-001 through Harness run `f001-t001-api-publication-a4`.
+- Ready next but not started: T-002; Docker-backed Foundry cannot run until Docker Desktop is running.
+- Waiting on dependencies: T-003 through T-006 follow the dependency chain in `tasks.md`.
 
 ## Current Cursor
 
-- Run ID: none
+- Run ID: `f001-t001-api-publication-a4` completed
 - Active feature: F-001 local-course-publication
-- Active task: T-001 ready for a fresh stable-ID Harness run
-- Last completed: shared `harness-events-v1` Runner implementation, 21 passing Runner tests and Sol PASS_WITH_NOTES
-- Next action: adopt the existing T-001 API diff into run `f001-t001-api-publication-a4`, then re-run QA and review
+- Active task: none; T-001 completed and T-002 has not started
+- Last completed: T-001 with 19 passing API tests, API typecheck, Runner `accepted`, and Sol `PASS_WITH_NOTES` (`P0=0`, `P1=0`, `P2=3`)
+- Next action: pause at the T-001 boundary; start T-002 only after Docker Desktop is available and the user asks to continue
 
 ## Global Gates
 
@@ -50,3 +50,4 @@
 - xj-ai may not bypass dependencies; only one heavy verification command runs at a time.
 - xj-review is the final arbiter.
 - This project explicitly opts into `harness-events-v1`; other projects remain on the legacy Runner mode unless they opt in themselves.
+- T-001 P2 backlog: real Nest HTTP Bearer Guard coverage, zero payout-wallet rejection, and strict historical `submissionHash` bytes32 validation.

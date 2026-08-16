@@ -54,6 +54,18 @@ export class CoursesController {
   @Get() list(@Query() query: PageDto) {
     return this.courses.list(query.page, query.limit);
   }
+
+  @Get("review-queue") @UseGuards(AuthGuard) reviewQueue(@CurrentPrincipal() p: Principal) {
+    if (p.role !== "ADMIN") throw Errors.forbidden();
+    return this.courses.reviewQueue();
+  }
+  @Get(":id/publication-package") @UseGuards(AuthGuard) publicationPackage(
+    @CurrentPrincipal() p: Principal,
+    @Param("id") id: string,
+  ) {
+    if (p.role !== "ADMIN") throw Errors.forbidden();
+    return this.courses.recoverPublicationPackage(id);
+  }
   @Get("mine") @UseGuards(AuthGuard) mine(@CurrentPrincipal() principal: Principal) {
     return this.courses.mine(principal.userId);
   }

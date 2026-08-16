@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { getAddress, keccak256, parseUnits, stringToHex } from "viem";
+import { getAddress, keccak256, parseUnits, stringToHex, zeroAddress } from "viem";
 import { Errors } from "../common/app-error";
 import { ENTITLEMENT_READER, type EntitlementReader } from "../entitlements/entitlement-reader";
 import { PrismaService } from "../prisma/prisma.service";
@@ -68,6 +68,25 @@ export class CoursesService {
         description: true,
         status: true,
         teacherId: true,
+      },
+    });
+  }
+  reviewQueue() {
+    return this.prisma.course.findMany({
+      where: { status: { in: ["PENDING_REVIEW", "APPROVED"] } },
+      orderBy: { updatedAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        teacherId: true,
+        status: true,
+        requestedPriceYD: true,
+        requestedPayoutWallet: true,
+        submissionHash: true,
+        certificateMetadataUri: true,
+        reviewedBy: true,
+        reviewedAt: true,
+        updatedAt: true,
       },
     });
   }
@@ -180,6 +199,12 @@ export class CoursesService {
     const reviewed = await this.prisma.course.findUniqueOrThrow({ where: { id: courseId } });
     return approved ? { course: reviewed, onchainConfig } : { course: reviewed };
   }
+  async recoverPublicationPackage(courseId: string) {
+    const course = await this.prisma.course.findUnique({ where: { id: courseId } });
+    if (!course) throw Errors.notFound();
+    if (course.status !== "APPROVED") throw Errors.conflict();
+    return this.publicationPackage(course);
+  }
   async addLesson(
     teacherId: string,
     courseId: string,
@@ -245,7 +270,8 @@ export class CoursesService {
     requestedPayoutWallet: string | null;
     submissionHash: string | null;
   }) {
-    const chainId = Number(process.env.CHAIN_ID ?? "11155111");
+    const configuredChainId = process.env.CHAIN_ID?.trim();
+    const chainId = configuredChainId ? Number(configuredChainId) : Number.NaN;
     const catalogAddress = process.env.COURSE_CATALOG_ADDRESS?.trim();
     if (
       !Number.isSafeInteger(chainId) ||
@@ -258,9 +284,11 @@ export class CoursesService {
     ) {
       throw Errors.unavailable();
     }
+    const normalizedCatalogAddress = getAddress(catalogAddress);
+    if (normalizedCatalogAddress === zeroAddress) throw Errors.unavailable();
     return {
       chainId,
-      catalogAddress: getAddress(catalogAddress),
+      catalogAddress: normalizedCatalogAddress,
       functionName: "configureCourse" as const,
       args: [
         chainCourseIdFrom(course.id),
