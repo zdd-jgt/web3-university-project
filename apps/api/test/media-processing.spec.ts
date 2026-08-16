@@ -11,16 +11,20 @@ import {
   ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
 import { LessonContentKind } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { failureDisposition } from "../src/media-worker/job-store";
+import { failureDisposition, PrismaMediaJobStore } from "../src/media-worker/job-store";
 import { S3MediaObjectStore } from "../src/media-worker/object-store";
 import { MediaProcessor } from "../src/media-worker/processor";
 import { ProcessingFailure } from "../src/media-worker/types";
 
 const run = promisify(execFile);
 const endpoint = process.env.MEDIA_TEST_S3_ENDPOINT?.trim();
-if (process.env.XJ_REQUIRE_MEDIA === "1" && !endpoint) {
-  throw new Error("MEDIA_TEST_S3_ENDPOINT is required for XJ media evidence");
+const databaseUrl = process.env.MEDIA_TEST_DATABASE_URL?.trim();
+if (process.env.XJ_REQUIRE_MEDIA === "1" && (!endpoint || !databaseUrl)) {
+  throw new Error(
+    "MEDIA_TEST_S3_ENDPOINT and MEDIA_TEST_DATABASE_URL are required for XJ media evidence",
+  );
 }
 
 const integration = endpoint ? describe : describe.skip;
@@ -179,6 +183,112 @@ describe("media retry policy", () => {
   });
 });
 
+describe.skipIf(!databaseUrl)("media job PostgreSQL state machine", () => {
+  const schema = `processing_${randomUUID().replaceAll("-", "")}`;
+  const baseUrl = databaseUrl ?? "postgresql://unused:unused@127.0.0.1:1/unused";
+  const scopedUrl = withSchema(baseUrl, schema);
+  const admin = new PrismaClient({ datasourceUrl: baseUrl });
+  const db = new PrismaClient({ datasourceUrl: scopedUrl });
+
+  beforeAll(async () => {
+    await admin.$executeRawUnsafe(`CREATE SCHEMA "${schema}"`);
+    await executeStatements(db, await migration("20260815180000_initial"));
+    await executeStatements(db, await migration("20260815193000_add_video_captions"));
+    await executeStatements(
+      db,
+      await migration("20260816120000_add_lesson_assets_and_learning_sessions"),
+    );
+    await db.user.create({
+      data: { id: "media-teacher", privySubject: `did:privy:${schema}`, role: "TEACHER" },
+    });
+    await db.course.create({
+      data: {
+        id: "media-course",
+        teacherId: "media-teacher",
+        title: "Media",
+        description: "Media processing",
+      },
+    });
+  });
+
+  afterAll(async () => {
+    await db.$disconnect();
+    await admin.$executeRawUnsafe(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`);
+    await admin.$disconnect();
+  });
+
+  it("executes claim, completion, retry and terminal failure against real PostgreSQL", async () => {
+    await createProcessingAsset(db, "complete", 1);
+    const jobs = new PrismaMediaJobStore(db, 60_000, 3);
+    const completedJob = await jobs.claim("worker-complete");
+    if (!completedJob) throw new Error("expected completion job");
+    expect(completedJob).toMatchObject({ assetId: "asset-complete", attempts: 1 });
+    await jobs.complete(completedJob, "worker-complete", {
+      readyObjectKey: "ready/asset-complete/v0.mp4",
+      detectedMimeType: "video/mp4",
+      sizeBytes: 2048n,
+      sha256: "c".repeat(64),
+      durationMs: 1000,
+    });
+    await expect(
+      db.lessonAsset.findUniqueOrThrow({ where: { id: "asset-complete" } }),
+    ).resolves.toMatchObject({
+      status: "READY",
+      detectedMimeType: "video/mp4",
+      sizeBytes: 2048n,
+    });
+    await expect(
+      db.mediaProcessJob.findUniqueOrThrow({ where: { assetId: "asset-complete" } }),
+    ).resolves.toMatchObject({
+      status: "DELIVERED",
+      attempts: 1,
+    });
+
+    await createProcessingAsset(db, "crash", 2);
+    const crashed = await jobs.claim("worker-crashed");
+    if (!crashed) throw new Error("expected crash recovery job");
+    await expect(jobs.claim("worker-too-early")).resolves.toBeNull();
+    await db.mediaProcessJob.update({
+      where: { assetId: "asset-crash" },
+      data: { leaseExpiresAt: new Date(0) },
+    });
+    const reclaimed = await jobs.claim("worker-reclaimed");
+    if (!reclaimed) throw new Error("expected expired lease reclamation");
+    expect(reclaimed).toMatchObject({ assetId: "asset-crash", attempts: 2 });
+    await jobs.fail(
+      reclaimed,
+      "worker-reclaimed",
+      new ProcessingFailure("PROCESSING_UNEXPECTED", false),
+    );
+
+    await createProcessingAsset(db, "retry", 3);
+    const first = await jobs.claim("worker-retry-1");
+    if (!first) throw new Error("expected retry job");
+    expect(first).toMatchObject({ assetId: "asset-retry", attempts: 1 });
+    await jobs.fail(first, "worker-retry-1", new ProcessingFailure("STORAGE_READ_FAILED", true));
+    await db.mediaProcessJob.update({
+      where: { assetId: "asset-retry" },
+      data: { availableAt: new Date(0) },
+    });
+    const second = await jobs.claim("worker-retry-2");
+    if (!second) throw new Error("expected reclaimed retry job");
+    expect(second).toMatchObject({ assetId: "asset-retry", attempts: 2 });
+    await jobs.fail(second, "worker-retry-2", new ProcessingFailure("DOCUMENT_INVALID", false));
+    await expect(
+      db.lessonAsset.findUniqueOrThrow({ where: { id: "asset-retry" } }),
+    ).resolves.toMatchObject({
+      status: "FAILED",
+      failureCode: "DOCUMENT_INVALID",
+    });
+    await expect(
+      db.mediaProcessJob.findUniqueOrThrow({ where: { assetId: "asset-retry" } }),
+    ).resolves.toMatchObject({
+      status: "FAILED",
+      attempts: 2,
+    });
+  });
+});
+
 const OFFICE_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
 function documentJob(id: string, sourceObjectKey: string, expectedSizeBytes: bigint) {
@@ -239,4 +349,46 @@ function testCrc32(bytes: Buffer): number {
     for (let bit = 0; bit < 8; bit += 1) crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
   }
   return (crc ^ 0xffffffff) >>> 0;
+}
+
+async function migration(name: string) {
+  return readFile(new URL(`../prisma/migrations/${name}/migration.sql`, import.meta.url), "utf8");
+}
+
+function withSchema(value: string, schema: string) {
+  const url = new URL(value);
+  url.searchParams.set("schema", schema);
+  return url.toString();
+}
+
+async function executeStatements(db: PrismaClient, sql: string) {
+  for (const statement of sql
+    .split(";")
+    .map((value) => value.trim())
+    .filter(Boolean)) {
+    await db.$executeRawUnsafe(statement);
+  }
+}
+
+async function createProcessingAsset(db: PrismaClient, suffix: string, position: number) {
+  await db.lesson.create({
+    data: {
+      id: `lesson-${suffix}`,
+      courseId: "media-course",
+      title: suffix,
+      position,
+      asset: {
+        create: {
+          id: `asset-${suffix}`,
+          kind: "VIDEO",
+          originalFileName: `${suffix}.mp4`,
+          sourceObjectKey: `source/${suffix}.mp4`,
+          declaredMimeType: "video/mp4",
+          sizeBytes: 1024n,
+          status: "PROCESSING",
+          processJob: { create: { id: `job-${suffix}` } },
+        },
+      },
+    },
+  });
 }

@@ -38,7 +38,7 @@
   - goal_required: no
   - rollback_or_blocker: 不得接受客户端 objectKey 或 READY 字段；若 MinIO presign 无法限制约定 headers，必须在 finalize 重新校验并记录限制。
 
-- [ ] T-003: 实现 FFmpeg/文档验真媒体处理进程与失败恢复 ~1h
+- [x] T-003: 实现 FFmpeg/文档验真媒体处理进程与失败恢复 ~1h
   - role: backend
   - depends_on: T-002
   - owned_paths: apps/api/src/media-worker, apps/api/src/media, apps/api/package.json, infra/media, apps/api/test/media-processing.spec.ts

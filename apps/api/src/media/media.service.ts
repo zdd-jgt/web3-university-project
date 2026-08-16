@@ -192,6 +192,7 @@ export class MediaService {
         create: { assetId: asset.id },
         update: {
           status: "PENDING",
+          attempts: 0,
           availableAt: new Date(),
           leaseOwner: null,
           leaseExpiresAt: null,
