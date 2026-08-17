@@ -15,22 +15,22 @@
 | F-001 | `specs/local-course-publication-feature` | ready | none | Git baseline and XJ Harness are valid | high | QA-3 | required | AC-001 through AC-009 have evidence and feature review passes |
 | F-002 | `specs/course-content-learning-feature` | ready | none | User confirmed local-only development and document completion rule | high | QA-3 | required | AC-001 through AC-012 have local evidence and feature review passes |
 | F-003 | `specs/certificate-delivery-reliability-feature` | waiting | F-002 | F-002 feature review passes | high | QA-3 | required | AC-001 through AC-008 have local evidence and feature review passes |
-| F-004 | `specs/teacher-admin-comments-closure-feature` | ready | none | User confirmed adoption of the current teacher/admin/comments worktree | high | QA-3 | required | AC-001 through AC-008 pass and the adoption run is accepted |
+| F-004 | `specs/teacher-admin-comments-closure-feature` | completed | none | User confirmed adoption of the current teacher/admin/comments worktree | high | QA-3 | PASS_WITH_NOTES | Run `f004-t001-teacher-admin-comments-closure-a2` accepted; P0/P1=0 |
 
 ## Ready Queue
 
-- Completed: F-001/T-001 and F-002/T-001 through T-004; latest accepted run is `f002-t004-learning-sessions-a2`.
-- User-prioritized ready task: F-004/T-001 adoption closure. Only one task may run at a time.
+- Completed: F-001/T-001, F-002/T-001 through T-004, and F-004/T-001; latest accepted run is `f004-t001-teacher-admin-comments-closure-a2`.
+- Proposed next task for user confirmation: F-002/T-005 desktop student video/document learning UI. Only one task may run at a time.
 - Paused but still ready: F-001/T-002; its existing dependency chain is unchanged.
 - Waiting on dependencies: F-003 waits for F-002 feature review.
 
 ## Current Cursor
 
-- Run ID: pending `f004-t001-teacher-admin-comments-closure`
-- Active feature: F-004 teacher-admin-comments-closure
-- Active task: T-001 ready for explicit adoption of the current worktree
-- Last completed: F-002/T-004 with authenticated learning sessions, real PostgreSQL completion/outbox evidence, and Runner `accepted`
-- Next action: adopt, review, verify and independently commit the current teacher/admin/comments closure
+- Run ID: `f004-t001-teacher-admin-comments-closure-a2` completed and Runner accepted
+- Active feature: none; awaiting user confirmation of the next backlog item
+- Active task: none
+- Last completed: F-004/T-001 with teacher/admin/comments API and UI boundaries, 66 Node tests, workspace typecheck, Web build, Biome, and desktop/tablet visual evidence
+- Next action: confirm F-002/T-005, then start a fresh scoped UI task from clean commit `54dd5ba`
 
 ## Global Gates
 
@@ -38,7 +38,7 @@
 - Payment / cost: no real funds, paid RPC or external deployment.
 - PII outbound: none.
 - External API: none required.
-- Browser / visual: not part of F-001; administrator browser signing is the next feature.
+- Browser / visual: F-004 Demo fail-closed states were checked at Desktop 1440x900 and Tablet 1024x768; future UI tasks retain their own visual gates.
 - Deployment: local Anvil only; Sepolia and cloud deployment remain unapproved.
 - Upload processing: local MinIO and local FFmpeg/ffprobe only; no AWS or paid media service.
 - Resource policy: strictly sequential focused checks; actual token count is recorded as `unavailable` when the Harness cannot observe it.
@@ -47,7 +47,32 @@
 
 | Feature | Task | Reason | Evidence / attempted steps | Required user decision |
 | --- | --- | --- | --- | --- |
-| F-001 | T-002, T-003, T-005 | Docker daemon is currently unavailable | `docker info` could not connect to the local socket on 2026-08-15 | Start Docker Desktop when these tasks are reached; no cloud fallback will be used |
+| F-001/F-002/F-003 | Local E2E tasks | Docker daemon is currently unavailable | Docker socket was unavailable on 2026-08-17 | Start Docker Desktop only when T-006/publication/certificate E2E is reached; no cloud fallback will be used |
+
+## Proposed Sequential Backlog
+
+### Existing executable XJ specs
+
+1. F-002/T-005: connect the student MP4/document learning UI to authenticated learning sessions and progress.
+2. F-002/T-006: run the real local MinIO -> FFmpeg/document verification -> PostgreSQL learning completion closure.
+3. F-001/T-002 through T-006: finish Anvil deployment fixture, exact Catalog projection, public visibility and API -> Anvil -> Worker publication E2E.
+4. F-003/T-001 through T-005: fix Worker dropped/pending transaction recovery, add the admin failure queue API/UI, and run PostgreSQL -> Anvil automatic SBT E2E.
+
+### Product gaps requiring a new PRD/spec before implementation
+
+1. Purchase history API and profile UI backed by canonical purchase projections; remove static profile counts.
+2. Live profile progress/certificate lists and archived-course certificate viewing.
+3. Home featured courses and course detail lessons driven by the live API rather than demo fixtures.
+4. The Graph deployment plus frontend history queries; the current package remains an undeployed template.
+5. Chainlink oracle demo freshness timestamp/age display; it remains an ETH/USD demonstration only.
+6. Performance follow-up for the current ~599 kB main Web bundle; code splitting is P2, not a release correctness blocker.
+
+### Explicit external-confirmation gates
+
+1. Initialize and fund the Sepolia Test USDT/YD and native ETH/YD Uniswap v4 pools after separately confirming both-side asset amounts and initial ratios.
+2. Deploy and verify the five contracts on Sepolia, then record exact addresses and deployment blocks.
+3. Configure a real Privy tenant, funded test wallets and Alchemy/Infura RPC without committing secrets.
+4. Deploy Subgraph and cloud services/AWS only after environment, cost, secrets and rollback approval.
 
 ## Notes
 
@@ -61,3 +86,4 @@
 - T-003 P2 backlog: DOCX shares the hardened Office ZIP verifier with PPTX/XLSX, but separate real PPTX/XLSX fixtures remain deferred to the final local E2E.
 - T-003 recovery note: the first run was blocked after review found raw queue SQL lacked real PostgreSQL evidence; a2 added claim, lease, recovery, retry and terminal-state execution evidence.
 - F-004 is a one-time adoption closure because existing backend/UI/docs changes overlap shared files. No new UI design is introduced; visual evidence remains mandatory and the normal layered task split resumes afterward.
+- F-004 recovery note: the first run was preserved as blocked after its second unreferenced visual artifact conflicted with Runner scope. The a2 run used one reviewed composite visual file and was accepted.
