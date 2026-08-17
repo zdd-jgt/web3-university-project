@@ -40,3 +40,13 @@ export class CommentsController {
     return this.comments.moderate(p.userId, courseId, commentId, dto.hidden, dto.reason);
   }
 }
+
+@Controller("v1/comments")
+@UseGuards(AuthGuard)
+export class CommentsAdminController {
+  constructor(private readonly comments: CommentsService) {}
+  @Get("review-queue") queue(@CurrentPrincipal() p: Principal) {
+    if (p.role !== "ADMIN") throw Errors.forbidden();
+    return this.comments.reviewQueue();
+  }
+}

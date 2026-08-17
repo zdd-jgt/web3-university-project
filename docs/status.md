@@ -20,7 +20,7 @@
 | Local infrastructure | locally tested | PostgreSQL, Redis, MinIO, and Anvil run through Docker Compose; migrations and a private local media bucket were exercised. |
 | Privy | implemented | Provider, access-token forwarding, linked-wallet checks, and EIP-712 profile signing exist; no real Privy tenant/session was exercised. |
 | Private video | partial | Entitlement-gated signed reads, captions requirement, and progress reporting exist. Upload initiation, processing, and admin READY workflow are not end-to-end. |
-| Teacher/admin web flows | partial | API review rules exist, but several dashboard screens remain demonstrative rather than fully wired forms. |
+| Teacher/admin web flows | locally tested | Teacher studio, admin console and purchaser comments are source-wired to authenticated API boundaries. Unit/component tests cover teacher application, draft editing, lesson/upload declarations, publication review packages, purchaser posting, course-teacher replies and reasoned admin moderation; server-side role, object and entitlement checks remain authoritative. Demo mode stays labelled and fails closed. A real browser-to-API-to-storage journey is not claimed. |
 | Uniswap swap web | locally tested | The web adapter builds canonical v4 PoolKeys, reads the official Sepolia Quoter and StateView, displays quote/impact/slippage/minimum/deadline, applies the Test USDT ERC-20 and Permit2 authorization boundary, and encodes an exact-input Universal Router 2.1.1 transaction. Pure and component tests pass. |
 | Uniswap pools | planned | No pool was initialized or funded. The Test USDT/YD 1:10 ratio and the manually calculated ETH/YD ratio are deployment inputs, not existing market facts. |
 | Sepolia/cloud | not started | No Sepolia transaction, Alchemy/Infura RPC proof, AWS resource, Graph deployment, DNS, or public URL was created. |
@@ -29,6 +29,9 @@
 
 - Browser visual, responsive, and keyboard interaction checks could not be run
   because no in-app browser instance was available during this delivery.
+- The teacher upload flow was exercised only against mocked API responses; a
+  real MinIO/S3 signed PUT, media processing READY transition, and caption
+  delivery remain unverified end-to-end.
 - Playback coverage detects submitted contiguous ranges, not whether a human was
   attentive. A hostile purchased client can still attempt to forge learning
   events; this is coursework-grade, not proctoring.

@@ -1,4 +1,4 @@
-import { Body, Controller, Patch, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Patch, Post, UseGuards } from "@nestjs/common";
 import { IsNotEmpty, IsString, Length, Matches } from "class-validator";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentPrincipal, type Principal } from "../auth/principal";
@@ -18,6 +18,9 @@ class ProfileChallengeDto {
 @UseGuards(AuthGuard)
 export class UsersController {
   constructor(private readonly users: UsersService) {}
+  @Get("me") me(@CurrentPrincipal() principal: Principal) {
+    return { userId: principal.userId, role: principal.role };
+  }
   @Post("challenge") challenge(
     @CurrentPrincipal() principal: Principal,
     @Body() dto: ProfileChallengeDto,

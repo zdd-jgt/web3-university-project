@@ -24,7 +24,7 @@ export class CommentsService {
     if (!course) throw Errors.notFound();
     if (parentId) {
       const parent = await this.prisma.comment.findFirst({
-        where: { id: parentId, courseId, deletedAt: null },
+        where: { id: parentId, courseId, deletedAt: null, parentId: null },
       });
       if (!parent) throw Errors.notFound();
       // A teacher can reply only inside a course they own. A student cannot impersonate a reply path.
@@ -58,6 +58,36 @@ export class CommentsService {
         },
       },
     });
+  }
+  async reviewQueue() {
+    const comments = await this.prisma.comment.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      select: {
+        id: true,
+        body: true,
+        createdAt: true,
+        authorId: true,
+        parentId: true,
+        courseId: true,
+        deletedAt: true,
+        moderatedBy: true,
+        moderationReason: true,
+        course: { select: { title: true } },
+      },
+    });
+    return comments.map((comment) => ({
+      id: comment.id,
+      body: comment.body,
+      createdAt: comment.createdAt,
+      authorId: comment.authorId,
+      parentId: comment.parentId,
+      courseId: comment.courseId,
+      courseTitle: comment.course.title,
+      hidden: comment.deletedAt !== null,
+      moderatedBy: comment.moderatedBy,
+      moderationReason: comment.moderationReason,
+    }));
   }
   async moderate(
     adminId: string,

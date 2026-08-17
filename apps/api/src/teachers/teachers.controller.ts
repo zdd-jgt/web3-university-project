@@ -20,6 +20,10 @@ export class TeachersController {
   @Get("me") mine(@CurrentPrincipal() principal: Principal) {
     return this.teachers.mine(principal.userId);
   }
+  @Get("review-queue") queue(@CurrentPrincipal() principal: Principal) {
+    if (principal.role !== "ADMIN") throw Errors.forbidden();
+    return this.teachers.reviewQueue();
+  }
   @Patch(":id/review") review(
     @CurrentPrincipal() principal: Principal,
     @Param("id") id: string,

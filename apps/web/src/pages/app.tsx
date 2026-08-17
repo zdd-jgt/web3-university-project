@@ -10,7 +10,6 @@ import {
   RefreshCw,
   ShieldCheck,
   TriangleAlert,
-  UploadCloud,
 } from "lucide-react";
 import { useReducer, useRef, useState } from "react";
 import { Link, Navigate, Route, Routes, useParams } from "react-router-dom";
@@ -18,7 +17,10 @@ import { formatUnits, type Hash } from "viem";
 import { usePublicClient, useReadContract, useSignTypedData, useWriteContract } from "wagmi";
 import { AppShell, PageIntro, ProfileChip } from "../components/layout";
 import { Button, Card, Field, Status } from "../components/ui";
+import { AdminPage } from "../features/admin/AdminPage";
+import { CommentsSection } from "../features/comments/CommentsSection";
 import { SwapPage } from "../features/swap/SwapPage";
+import { TeacherPage } from "../features/teacher/TeacherPage";
 import { type ApiCourseDetail, useUniversityApi } from "../lib/api";
 import {
   certificateSbtAbi,
@@ -373,6 +375,7 @@ function CourseDetail() {
           Video access is intentionally limited to purchased-course entitlement checks.
         </div>
       </aside>
+      <CommentsSection courseId={course.id} teacherId={detail.data?.teacherId} />
     </div>
   );
 }
@@ -1045,151 +1048,6 @@ function Profile() {
   );
 }
 
-function Teacher() {
-  const [applied, setApplied] = useState(false);
-  const [upload, setUpload] = useState<"idle" | "uploading" | "failed">("idle");
-  const [request, setRequest] = useState(false);
-  return (
-    <div className="page">
-      <PageIntro eyebrow="TEACHER STUDIO" title="Create coursework with a review boundary.">
-        Publishing, price changes and access changes remain admin-reviewed actions.
-      </PageIntro>
-      <section className="detail-grid">
-        <Card>
-          <h2>Teacher application</h2>
-          <Field label="Teaching focus" id="focus" placeholder="e.g. Solidity security" required />
-          <Field label="Portfolio URL" id="portfolio" type="url" placeholder="https://" />
-          <Button type="button" onClick={() => setApplied(true)} disabled={applied}>
-            {applied ? "Application submitted (demo)" : "Submit for review"}
-          </Button>
-          {applied && (
-            <p className="success-text" role="status">
-              Submitted. Admin review is required before course publishing.
-            </p>
-          )}
-        </Card>
-        <Card>
-          <h2>Course draft</h2>
-          <Field label="Course title" id="draft-title" defaultValue="A practical ERC-20" />
-          <Field
-            label="Proposed price in YD"
-            id="draft-price"
-            inputMode="decimal"
-            defaultValue="60"
-            hint="Price changes require admin review after publication."
-          />
-          <label className="upload-zone">
-            <UploadCloud />
-            <span>Upload lesson asset</span>
-            <input
-              aria-label="Upload lesson asset"
-              type="file"
-              onChange={() => {
-                setUpload("uploading");
-                window.setTimeout(() => setUpload("failed"), 400);
-              }}
-            />
-          </label>
-          {upload === "uploading" && (
-            <p role="status" className="muted">
-              Preparing upload…
-            </p>
-          )}
-          {upload === "failed" && (
-            <p role="alert" className="error">
-              Demo upload is unavailable without the protected storage adapter. Your draft metadata
-              remains editable.
-            </p>
-          )}
-          <Button type="button">Save draft</Button>
-        </Card>
-      </section>
-      <Card>
-        <h2>Publication controls</h2>
-        <div className="row spread">
-          <div>
-            <strong>Draft: A practical ERC-20</strong>
-            <p className="muted">No learner can buy a draft.</p>
-          </div>
-          <Status>Not submitted</Status>
-        </div>
-        <div className="button-row">
-          <Button type="button">Submit publication request</Button>
-          <Button type="button" className="secondary" onClick={() => setRequest(true)}>
-            Request price change
-          </Button>
-        </div>
-        {request && (
-          <p className="success-text" role="status">
-            Price-change request queued for admin review (demo).
-          </p>
-        )}
-      </Card>
-    </div>
-  );
-}
-
-function Admin() {
-  const [status, setStatus] = useState<"pending" | "published" | "paused">("pending");
-  return (
-    <div className="page">
-      <PageIntro
-        eyebrow="ADMIN REVIEW"
-        title="Review requests; do not assume UI role gates are authorization."
-      >
-        Production access must be verified by the API and contract-admin policy. This is a local
-        admin console mock.
-      </PageIntro>
-      <Card>
-        <div className="row spread">
-          <div>
-            <p className="eyebrow">PUBLISH REQUEST</p>
-            <h2>A practical ERC-20</h2>
-            <p className="muted">Teacher: Maya Chen · Proposed price: 60 YD · 8 lessons</p>
-          </div>
-          <Status
-            tone={status === "published" ? "success" : status === "paused" ? "error" : "warning"}
-          >
-            {status}
-          </Status>
-        </div>
-        <div className="admin-checks">
-          <label>
-            <input type="checkbox" /> Required lessons have protected source assets
-          </label>
-          <label>
-            <input type="checkbox" /> Sale price and fee disclosure reviewed
-          </label>
-          <label>
-            <input type="checkbox" /> Teacher status verified by the server
-          </label>
-        </div>
-        <div className="button-row">
-          <Button
-            disabled={status === "published"}
-            type="button"
-            onClick={() => setStatus("published")}
-          >
-            Publish course
-          </Button>
-          <Button
-            className="secondary"
-            disabled={status !== "published"}
-            type="button"
-            onClick={() => setStatus("paused")}
-          >
-            Pause sale
-          </Button>
-        </div>
-        <p className="fine-print">
-          Demo state only. A live command must require an authorized server/contract transaction and
-          report a receipt.
-        </p>
-      </Card>
-    </div>
-  );
-}
-
 function Certificate() {
   const { id = "solidity-basics" } = useParams();
   const api = useUniversityApi();
@@ -1350,8 +1208,8 @@ export function App() {
         <Route path="/swap" element={<SwapPage />} />
         <Route path="/learn/:id" element={<Learn />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/teacher" element={<Teacher />} />
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/teacher" element={<TeacherPage />} />
+        <Route path="/admin" element={<AdminPage />} />
         <Route path="/certificates/:id" element={<Certificate />} />
         <Route path="/oracle-demo" element={<OracleDemo />} />
         <Route path="*" element={<Navigate to="/" replace />} />

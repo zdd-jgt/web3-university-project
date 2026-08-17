@@ -21,19 +21,22 @@ body {
 }
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 button,
 a,
 input,
-select {
+select,
+textarea {
   -webkit-tap-highlight-color: transparent;
 }
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
-select:focus-visible {
+select:focus-visible,
+textarea:focus-visible {
   outline: 3px solid #b9a3ff;
   outline-offset: 3px;
 }
@@ -503,13 +506,17 @@ footer {
   font-size: 0.9rem;
 }
 select,
-input {
+input,
+textarea {
   min-height: 41px;
   padding: 9px 11px;
   color: #f3f0ff;
   background: #0d0c18;
   border: 1px solid #69647f;
   border-radius: 8px;
+}
+textarea {
+  resize: vertical;
 }
 .empty-state {
   display: flex;
@@ -729,6 +736,9 @@ input {
   font-size: 0.86rem;
 }
 .field input {
+  width: 100%;
+}
+.field textarea {
   width: 100%;
 }
 .field small {
@@ -989,6 +999,42 @@ input {
 .admin-checks input {
   min-height: auto;
 }
+.admin-review-item {
+  padding: 18px 0;
+  border-top: 1px solid #2c2940;
+}
+.admin-review-item:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+.publication-package {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid #4f4680;
+  border-radius: 10px;
+  background: #0d0c18;
+}
+.publication-package dl {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0;
+}
+.publication-package dl div {
+  display: grid;
+  gap: 2px;
+}
+.publication-package dt {
+  color: #9994ad;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.publication-package dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #f3f0ff;
+  font-size: 0.86rem;
+}
 .certificate {
   display: flex;
   flex-direction: column;
@@ -1151,4 +1197,42 @@ input {
     align-items: flex-start;
     flex-wrap: wrap;
   }
+}
+
+.comment-thread {
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 0;
+}
+.comment-meta {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.comment-body {
+  margin: 0;
+  white-space: pre-wrap;
+}
+.comment-reply {
+  border-left: 2px solid rgba(148, 163, 184, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-left: 12px;
+  padding-left: 14px;
+}
+.comment-new,
+.comment-reply-form {
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 16px;
+}
+.comment-reply-form {
+  border-top: none;
+  padding-top: 0;
 }

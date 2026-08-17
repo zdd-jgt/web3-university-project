@@ -24,7 +24,167 @@ export type ApiCourseDetail = ApiCourse & {
   }>;
 };
 
+export type TeacherApplication = {
+  id: string;
+  userId: string;
+  statement: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+};
+
+export type LessonAssetStatus = "UPLOADING" | "PROCESSING" | "READY" | "FAILED";
+
+export type ApiLessonAsset = {
+  id: string;
+  kind: "VIDEO" | "DOCUMENT";
+  status: LessonAssetStatus;
+  originalFileName: string;
+  declaredMimeType: string;
+  detectedMimeType: string | null;
+  sizeBytes: string | null;
+  durationMs: number | null;
+  sha256: string | null;
+  captionsObjectKey: string | null;
+  sourceObjectKey: string;
+  failureCode: string | null;
+  readyAt: string | null;
+};
+
+export type ApiTeacherLesson = {
+  id: string;
+  title: string;
+  position: number;
+  required: boolean;
+  asset: ApiLessonAsset | null;
+};
+
+export type ApiCourseStatus = "DRAFT" | "PENDING_REVIEW" | "APPROVED" | "PUBLISHED" | "ARCHIVED";
+
+export type ApiTeacherCourse = {
+  id: string;
+  title: string;
+  description: string;
+  status: ApiCourseStatus;
+  priceYD: string | null;
+  requestedPriceYD: string | null;
+  requestedPayoutWallet: string | null;
+  certificateMetadataUri: string | null;
+  updatedAt: string;
+  lessons: ApiTeacherLesson[];
+};
+
+export type ApiUploadSession = {
+  assetId: string;
+  uploadUrl: string;
+  requiredHeaders: Record<string, string>;
+  expiresAt: string;
+  status: LessonAssetStatus;
+  version: number;
+};
+
+export type ApiAssetStatus = {
+  assetId: string;
+  kind: "VIDEO" | "DOCUMENT";
+  originalFileName: string;
+  declaredMimeType: string;
+  detectedMimeType: string | null;
+  sizeBytes: string | null;
+  durationMs: number | null;
+  status: LessonAssetStatus;
+  uploadExpiresAt: string | null;
+  processingStartedAt: string | null;
+  readyAt: string | null;
+  failureCode: string | null;
+  version: number;
+};
+
+export type ApiReviewQueueItem = {
+  id: string;
+  title: string;
+  teacherId: string;
+  status: ApiCourseStatus;
+  requestedPriceYD: string | null;
+  requestedPayoutWallet: string | null;
+  submissionHash: string | null;
+  certificateMetadataUri: string | null;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  updatedAt: string;
+};
+
+export type ApiPublicationPackage = {
+  chainId: number;
+  catalogAddress: Address;
+  functionName: "configureCourse";
+  args: [string, string, Address, string];
+};
+
+export type ApiCommentReply = {
+  id: string;
+  body: string;
+  authorId: string;
+  createdAt: string;
+};
+
+export type ApiCommentThread = ApiCommentReply & {
+  replies: ApiCommentReply[];
+};
+
+export type ApiCommentQueueItem = {
+  id: string;
+  body: string;
+  createdAt: string;
+  authorId: string;
+  parentId: string | null;
+  courseId: string;
+  courseTitle: string;
+  hidden: boolean;
+  moderatedBy: string | null;
+  moderationReason: string | null;
+};
+
+export type ApiSession = {
+  userId: string;
+  role: "STUDENT" | "TEACHER" | "ADMIN";
+};
+
 export class ApiUnavailableError extends Error {}
+
+export class ApiRequestError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+export function apiErrorMessage(error: unknown): string {
+  if (error instanceof ApiUnavailableError) return error.message;
+  if (error instanceof ApiRequestError) {
+    switch (error.status) {
+      case 401:
+        return "Your session is missing or expired. Sign in again before retrying.";
+      case 403:
+        return "Your account is not authorized for this action. Server roles are authoritative.";
+      case 404:
+        return "The requested resource no longer exists.";
+      case 409:
+        return "The request conflicts with the current server state. Reload and review before retrying.";
+      case 429:
+        return "Too many requests. Wait briefly, then retry.";
+      case 503:
+        return "The service is temporarily unavailable. No state was changed by this attempt.";
+      default:
+        return `The API rejected the request (HTTP ${error.status}).`;
+    }
+  }
+  if (error instanceof TypeError)
+    return "The API could not be reached. Check the network and retry.";
+  return "The request did not complete. Retry after checking your session.";
+}
 
 type Auth = { getAccessToken: () => Promise<string | null>; wallet?: Address };
 
@@ -55,7 +215,8 @@ export class UniversityApi {
       headers.set("x-wallet-address", this.auth.wallet);
     }
     const response = await fetch(new URL(path, this.baseUrl), { ...init, headers });
-    if (!response.ok) throw new Error(`API request failed (${response.status}).`);
+    if (!response.ok)
+      throw new ApiRequestError(response.status, `API request failed (${response.status}).`);
     return response.json() as Promise<T>;
   }
 
@@ -66,9 +227,34 @@ export class UniversityApi {
     return this.request<ApiCourseDetail>(`/v1/courses/${encodeURIComponent(courseId)}`);
   }
   comments(courseId: string) {
-    return this.request<unknown[]>(
+    return this.request<ApiCommentThread[]>(
       `/v1/courses/${encodeURIComponent(courseId)}/comments?page=1&limit=20`,
     );
+  }
+  createComment(courseId: string, body: string, parentId?: string) {
+    return this.request<ApiCommentReply>(
+      `/v1/courses/${encodeURIComponent(courseId)}/comments`,
+      { method: "POST", body: JSON.stringify(parentId ? { body, parentId } : { body }) },
+      true,
+    );
+  }
+  moderateComment(courseId: string, commentId: string, hidden: boolean, reason: string) {
+    return this.request<{
+      id: string;
+      deletedAt: string | null;
+      moderatedBy: string;
+      moderationReason: string;
+    }>(
+      `/v1/courses/${encodeURIComponent(courseId)}/comments/${encodeURIComponent(commentId)}/moderate`,
+      { method: "PATCH", body: JSON.stringify({ hidden, reason }) },
+      true,
+    );
+  }
+  commentReviewQueue() {
+    return this.request<ApiCommentQueueItem[]>("/v1/comments/review-queue", {}, true);
+  }
+  me() {
+    return this.request<ApiSession>("/v1/profile/me", {}, true);
   }
   videoUrl(lessonId: string) {
     return this.request<{ url: string; captionsUrl?: string }>(
@@ -134,6 +320,124 @@ export class UniversityApi {
     return this.request(
       "/v1/profile",
       { method: "PATCH", body: JSON.stringify({ displayName, nonce, signature }) },
+      true,
+    );
+  }
+
+  // Teacher applications
+  applyTeacher(statement: string) {
+    return this.request<TeacherApplication>(
+      "/v1/teacher-applications",
+      { method: "POST", body: JSON.stringify({ statement }) },
+      true,
+    );
+  }
+  myTeacherApplications() {
+    return this.request<TeacherApplication[]>("/v1/teacher-applications/me", {}, true);
+  }
+  teacherApplicationQueue() {
+    return this.request<TeacherApplication[]>("/v1/teacher-applications/review-queue", {}, true);
+  }
+  reviewTeacherApplication(id: string, approved: boolean) {
+    return this.request<TeacherApplication>(
+      `/v1/teacher-applications/${encodeURIComponent(id)}/review`,
+      { method: "PATCH", body: JSON.stringify({ approved }) },
+      true,
+    );
+  }
+
+  // Teacher course management
+  myCourses() {
+    return this.request<ApiTeacherCourse[]>("/v1/courses/mine", {}, true);
+  }
+  createCourse(title: string, description: string) {
+    return this.request<ApiTeacherCourse>(
+      "/v1/courses",
+      { method: "POST", body: JSON.stringify({ title, description }) },
+      true,
+    );
+  }
+  updateCourse(id: string, fields: { title?: string; description?: string }) {
+    return this.request<ApiTeacherCourse>(
+      `/v1/courses/${encodeURIComponent(id)}`,
+      { method: "PATCH", body: JSON.stringify(fields) },
+      true,
+    );
+  }
+  addLesson(courseId: string, lesson: { title: string; position: number; required: boolean }) {
+    return this.request<ApiTeacherLesson>(
+      `/v1/courses/${encodeURIComponent(courseId)}/lessons`,
+      { method: "POST", body: JSON.stringify(lesson) },
+      true,
+    );
+  }
+  submitCourse(
+    courseId: string,
+    submission: { priceYD: string; payoutWallet: string; certificateMetadataUri: string },
+  ) {
+    return this.request<ApiTeacherCourse>(
+      `/v1/courses/${encodeURIComponent(courseId)}/submit`,
+      { method: "POST", body: JSON.stringify(submission) },
+      true,
+    );
+  }
+
+  // Lesson asset uploads
+  createUploadSession(
+    lessonId: string,
+    declaration: {
+      kind: "VIDEO" | "DOCUMENT";
+      fileName: string;
+      declaredMimeType: string;
+      sizeBytes: number;
+    },
+  ) {
+    return this.request<ApiUploadSession>(
+      `/v1/lessons/${encodeURIComponent(lessonId)}/assets/upload-session`,
+      { method: "POST", body: JSON.stringify(declaration) },
+      true,
+    );
+  }
+  finalizeAsset(assetId: string) {
+    return this.request<ApiAssetStatus>(
+      `/v1/assets/${encodeURIComponent(assetId)}/finalize`,
+      { method: "POST" },
+      true,
+    );
+  }
+  retryAsset(assetId: string) {
+    return this.request<ApiAssetStatus>(
+      `/v1/assets/${encodeURIComponent(assetId)}/retry`,
+      { method: "POST" },
+      true,
+    );
+  }
+  assetStatus(assetId: string) {
+    return this.request<ApiAssetStatus>(
+      `/v1/assets/${encodeURIComponent(assetId)}/status`,
+      {},
+      true,
+    );
+  }
+
+  // Admin course review
+  courseReviewQueue() {
+    return this.request<ApiReviewQueueItem[]>("/v1/courses/review-queue", {}, true);
+  }
+  reviewCourse(courseId: string, approved: boolean) {
+    return this.request<{
+      course: ApiTeacherCourse;
+      onchainConfig?: ApiPublicationPackage;
+    }>(
+      `/v1/courses/${encodeURIComponent(courseId)}/review`,
+      { method: "PATCH", body: JSON.stringify({ approved }) },
+      true,
+    );
+  }
+  publicationPackage(courseId: string) {
+    return this.request<ApiPublicationPackage>(
+      `/v1/courses/${encodeURIComponent(courseId)}/publication-package`,
+      {},
       true,
     );
   }

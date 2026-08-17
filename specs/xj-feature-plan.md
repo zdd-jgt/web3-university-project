@@ -15,21 +15,22 @@
 | F-001 | `specs/local-course-publication-feature` | ready | none | Git baseline and XJ Harness are valid | high | QA-3 | required | AC-001 through AC-009 have evidence and feature review passes |
 | F-002 | `specs/course-content-learning-feature` | ready | none | User confirmed local-only development and document completion rule | high | QA-3 | required | AC-001 through AC-012 have local evidence and feature review passes |
 | F-003 | `specs/certificate-delivery-reliability-feature` | waiting | F-002 | F-002 feature review passes | high | QA-3 | required | AC-001 through AC-008 have local evidence and feature review passes |
+| F-004 | `specs/teacher-admin-comments-closure-feature` | ready | none | User confirmed adoption of the current teacher/admin/comments worktree | high | QA-3 | required | AC-001 through AC-008 pass and the adoption run is accepted |
 
 ## Ready Queue
 
-- Completed: F-001/T-001 through Harness run `f001-t001-api-publication-a4`.
-- User-prioritized ready task: F-002/T-004. Only one task may run at a time.
+- Completed: F-001/T-001 and F-002/T-001 through T-004; latest accepted run is `f002-t004-learning-sessions-a2`.
+- User-prioritized ready task: F-004/T-001 adoption closure. Only one task may run at a time.
 - Paused but still ready: F-001/T-002; its existing dependency chain is unchanged.
 - Waiting on dependencies: F-003 waits for F-002 feature review.
 
 ## Current Cursor
 
-- Run ID: `f002-t003-media-processing-a2` completed and Runner accepted
-- Active feature: F-002 course-content-learning
-- Active task: none; F-002/T-001 through T-003 completed, T-004 is ready
-- Last completed: T-003 with 34 passing tests against real PostgreSQL, MinIO and FFmpeg, API typecheck, Runner `accepted`, and Sol `PASS_WITH_NOTES` (`P0=0`, `P1=0`, `P2=1`)
-- Next action: start F-002/T-004 authenticated learning sessions and unique course completion transaction
+- Run ID: pending `f004-t001-teacher-admin-comments-closure`
+- Active feature: F-004 teacher-admin-comments-closure
+- Active task: T-001 ready for explicit adoption of the current worktree
+- Last completed: F-002/T-004 with authenticated learning sessions, real PostgreSQL completion/outbox evidence, and Runner `accepted`
+- Next action: adopt, review, verify and independently commit the current teacher/admin/comments closure
 
 ## Global Gates
 
@@ -59,3 +60,4 @@
 - T-002 P2 backlog: real MinIO presigned PUT-to-HEAD evidence is deferred to T-006 and may not be claimed from unit mocks.
 - T-003 P2 backlog: DOCX shares the hardened Office ZIP verifier with PPTX/XLSX, but separate real PPTX/XLSX fixtures remain deferred to the final local E2E.
 - T-003 recovery note: the first run was blocked after review found raw queue SQL lacked real PostgreSQL evidence; a2 added claim, lease, recovery, retry and terminal-state execution evidence.
+- F-004 is a one-time adoption closure because existing backend/UI/docs changes overlap shared files. No new UI design is introduced; visual evidence remains mandatory and the normal layered task split resumes afterward.

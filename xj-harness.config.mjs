@@ -2,14 +2,7 @@ const pnpm = "/Users/jgt/.volta/bin/pnpm";
 
 export default {
   verificationCommands: {
-    "api-course-publish": [
-      pnpm,
-      "--filter",
-      "@web3-university/api",
-      "test",
-      "--",
-      "course",
-    ],
+    "api-course-publish": [pnpm, "--filter", "@web3-university/api", "test", "--", "course"],
     "api-typecheck": [pnpm, "--filter", "@web3-university/api", "typecheck"],
     "api-media-schema": [
       pnpm,
@@ -79,6 +72,7 @@ export default {
       "--",
       "certificate-jobs",
     ],
+    "teacher-admin-comments-closure": [pnpm, "test"],
     "worker-catalog": [
       "/usr/local/bin/go",
       "-C",
@@ -87,13 +81,7 @@ export default {
       "./internal/indexer",
       "./internal/storage",
     ],
-    "worker-vet": [
-      "/usr/local/bin/go",
-      "-C",
-      "services/worker",
-      "vet",
-      "./...",
-    ],
+    "worker-vet": ["/usr/local/bin/go", "-C", "services/worker", "vet", "./..."],
     "worker-certificate-reliability": [
       "/usr/bin/env",
       "XJ_REQUIRE_POSTGRES=1",
@@ -148,18 +136,9 @@ export default {
       "fmt",
       "--check",
     ],
-    "local-course-publication-e2e": [
-      "/bin/bash",
-      "infra/scripts/local-course-publication-e2e.sh",
-    ],
-    "local-learning-content-e2e": [
-      "/bin/bash",
-      "infra/scripts/local-learning-content-e2e.sh",
-    ],
-    "local-certificate-e2e": [
-      "/bin/bash",
-      "infra/scripts/local-certificate-e2e.sh",
-    ],
+    "local-course-publication-e2e": ["/bin/bash", "infra/scripts/local-course-publication-e2e.sh"],
+    "local-learning-content-e2e": ["/bin/bash", "infra/scripts/local-learning-content-e2e.sh"],
+    "local-certificate-e2e": ["/bin/bash", "infra/scripts/local-certificate-e2e.sh"],
     "repo-check": [pnpm, "check"],
     "repo-typecheck": [pnpm, "typecheck"],
   },

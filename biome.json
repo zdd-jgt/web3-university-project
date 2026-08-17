@@ -7,7 +7,14 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!packages/contracts", "!packages/subgraph"]
+    "includes": [
+      "**",
+      "!packages/contracts",
+      "!packages/subgraph",
+      "!.xj/runs",
+      "!.xj/experiments",
+      "!.xj/visual"
+    ]
   },
   "formatter": {
     "enabled": true,
