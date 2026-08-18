@@ -83,6 +83,18 @@ export class LearningSessionsService {
     const readyObjectKey = asset.readyObjectKey;
     const detectedMimeType = asset.detectedMimeType;
     if (!readyObjectKey || !detectedMimeType) throw Errors.conflict();
+    // Prepare the external credential before touching the active database session. If signing
+    // fails, the learner keeps the still-valid session instead of being disconnected mid-playback.
+    const signed = await this.storage.signRead(
+      readyObjectKey,
+      asset.kind === "VIDEO"
+        ? "video"
+        : {
+            contentType: detectedMimeType,
+            disposition: inlineDocument(detectedMimeType) ? "inline" : "attachment",
+            fileName: asset.originalFileName,
+          },
+    );
     const now = this.clock.now();
     const session = await this.prisma.$transaction(async (tx) => {
       await tx.$executeRaw(
@@ -101,33 +113,10 @@ export class LearningSessionsService {
           kind: asset.kind,
           expiresAt: new Date(now.getTime() + SESSION_TTL_MS),
           lastHeartbeatAt: asset.kind === "VIDEO" ? now : null,
+          accessedAt: now,
         },
       });
     });
-    let signed: { url: string; expiresAt: Date };
-    try {
-      signed = await this.storage.signRead(
-        readyObjectKey,
-        asset.kind === "VIDEO"
-          ? "video"
-          : {
-              contentType: detectedMimeType,
-              disposition: inlineDocument(detectedMimeType) ? "inline" : "attachment",
-              fileName: asset.originalFileName,
-            },
-      );
-    } catch (error) {
-      await this.prisma.learningSession.updateMany({
-        where: { id: session.id, status: "ACTIVE", accessedAt: null },
-        data: { status: "EXPIRED" },
-      });
-      throw error;
-    }
-    const changed = await this.prisma.learningSession.updateMany({
-      where: { id: session.id, userId, buyerWalletId: wallet.id, status: "ACTIVE" },
-      data: { accessedAt: this.clock.now() },
-    });
-    if (changed.count !== 1) throw Errors.conflict();
     return {
       sessionId: session.id,
       lessonId,

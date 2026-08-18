@@ -1236,3 +1236,24 @@ textarea {
   border-top: none;
   padding-top: 0;
 }
+
+.video-player-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.video-player-stack .video-shell {
+  width: 100%;
+}
+.video-session-meta {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+}
+.document-lesson {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}

@@ -76,28 +76,28 @@
   - goal_required: no
   - rollback_or_blocker: 需要真实 PostgreSQL 证明并发唯一性；若测试被跳过则任务不能完成。
 
-- [ ] T-005: 接通桌面教师上传与学生视频/文档学习界面 ~1h
-  - role: frontend
+- [x] T-005: 接通桌面教师上传与学生视频/文档学习界面 ~1h
+  - role: general
   - depends_on: T-004
-  - owned_paths: apps/web/src/features/course-content, apps/web/src/lib/api.ts, apps/web/src/pages/app.tsx, apps/web/src/styles.css, apps/web/src/test/setup.ts
+  - owned_paths: apps/web/src/features/course-content, apps/web/src/features/teacher/TeacherPage.test.tsx, apps/web/src/lib/api.ts, apps/web/src/lib/api.test.ts, apps/web/src/pages/app.tsx, apps/web/src/styles.css, apps/web/src/test/setup.ts, apps/api/src/learning/learning-sessions.service.ts, apps/api/test/learning-sessions.spec.ts, specs/course-content-learning-feature/tasks.md, specs/course-content-learning-feature/evidence
   - shared_files: none
-  - risk: medium
-  - qa_level: QA-2
+  - risk: high
+  - qa_level: QA-3
   - review_required: yes
   - acceptance: AC-011
   - test_cases: TC-014, TC-015
-  - verify: web-learning-content
-  - review_verify: web-typecheck
+  - verify: teacher-admin-comments-closure
+  - review_verify: repo-typecheck
   - ui_mode: standard
   - design_source: none
   - visual_required: yes
   - baseline_action: test
   - mobile_required: no
-  - agent_route: terra-frontend
-  - estimated_tokens: 9000
+  - agent_route: sol
+  - estimated_tokens: 12000
   - estimated_time: 1h
   - goal_required: yes
-  - rollback_or_blocker: 当前 web 文件已有未提交 Uniswap 改动，启动前必须显式 adopt 或把本 task 标为 BLOCKED，不能混入既有 diff。
+  - rollback_or_blocker: 当前 UI 改动已由用户明确授权通过 XJ adopt 纳入；签名 URL 续签必须先成功准备新凭据再切换会话，失败时保留旧会话和播放状态。若真实浏览器无法证明播放位置恢复，则保持 BLOCKED。
 
 - [ ] T-006: 串行验证本地 MinIO/FFmpeg/PostgreSQL 学习闭环并收口证据 ~1h
   - role: qa

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowDownUp,
   BadgeCheck,
@@ -11,7 +11,7 @@ import {
   ShieldCheck,
   TriangleAlert,
 } from "lucide-react";
-import { useReducer, useRef, useState } from "react";
+import { useReducer, useState } from "react";
 import { Link, Navigate, Route, Routes, useParams } from "react-router-dom";
 import { formatUnits, type Hash } from "viem";
 import { usePublicClient, useReadContract, useSignTypedData, useWriteContract } from "wagmi";
@@ -19,9 +19,11 @@ import { AppShell, PageIntro, ProfileChip } from "../components/layout";
 import { Button, Card, Field, Status } from "../components/ui";
 import { AdminPage } from "../features/admin/AdminPage";
 import { CommentsSection } from "../features/comments/CommentsSection";
+import { DocumentLesson } from "../features/course-content/DocumentLesson";
+import { VideoLessonPlayer } from "../features/course-content/VideoLessonPlayer";
 import { SwapPage } from "../features/swap/SwapPage";
 import { TeacherPage } from "../features/teacher/TeacherPage";
-import { type ApiCourseDetail, useUniversityApi } from "../lib/api";
+import { type ApiCourseDetail, apiErrorMessage, useUniversityApi } from "../lib/api";
 import {
   certificateSbtAbi,
   chainlinkPriceOracleAbi,
@@ -304,7 +306,12 @@ function CourseDetail() {
         title: index === 0 ? "Orientation and safety boundary" : `Required lesson ${index + 1}`,
         position: index + 1,
         required: true,
-        video: { durationMs: (index % 2 ? 24 : 18) * 60_000, status: "READY" as const },
+        asset: {
+          kind: "VIDEO" as const,
+          durationMs: (index % 2 ? 24 : 18) * 60_000,
+          detectedMimeType: "video/mp4",
+          status: "READY" as const,
+        },
       }));
   return (
     <div className="page">
@@ -359,7 +366,11 @@ function CourseDetail() {
                 <strong>{lesson.title}</strong>
                 <small>
                   {lesson.required ? "Required" : "Optional"} ·{" "}
-                  {lesson.video ? `${Math.ceil(lesson.video.durationMs / 60_000)} min` : "Pending"}
+                  {lesson.asset?.kind === "VIDEO" && lesson.asset.durationMs
+                    ? `${Math.ceil(lesson.asset.durationMs / 60_000)} min video`
+                    : lesson.asset?.kind === "DOCUMENT"
+                      ? "Document"
+                      : "Pending"}
                 </small>
               </div>
               <LockKeyhole size={16} aria-label="Available after purchase" />
@@ -687,22 +698,14 @@ function Learn() {
 
 function LearningCourse({ course, apiCourse }: { course: Course; apiCourse?: ApiCourseDetail }) {
   const api = useUniversityApi();
+  const queryClient = useQueryClient();
   const [completed, setCompleted] = useState(3);
   const [activeLessonIndex, setActiveLessonIndex] = useState(0);
-  const [syncError, setSyncError] = useState(false);
-  const lastSentMs = useRef(0);
-  const lastObservedMs = useRef(0);
-  const syncing = useRef(false);
   const activeLesson = apiCourse?.lessons[activeLessonIndex];
   const progress = useQuery({
     queryKey: ["course-progress", course.id],
     queryFn: () => api.courseProgress(course.id),
     enabled: api.available && Boolean(apiCourse),
-  });
-  const video = useQuery({
-    queryKey: ["lesson-video", activeLesson?.id],
-    queryFn: () => api.videoUrl(activeLesson?.id ?? ""),
-    enabled: api.available && activeLesson?.video?.status === "READY",
   });
   const liveCompleted = progress.data?.completedLessons ?? 0;
   const completedCount = api.available ? liveCompleted : completed;
@@ -714,28 +717,23 @@ function LearningCourse({ course, apiCourse }: { course: Course; apiCourse?: Api
     : course.lessons > 0
       ? Math.round((completed / course.lessons) * 100)
       : 0;
+  const activeProgress = activeLesson
+    ? progress.data?.lessons.find((item) => item.lessonId === activeLesson.id)
+    : undefined;
+  const activeDetailLesson = apiCourse?.lessons.find((lesson) => lesson.id === activeLesson?.id);
 
-  async function syncVideoProgress(endMs: number) {
-    if (!activeLesson || syncing.current) return;
-    const startMs = lastSentMs.current;
-    if (endMs - startMs < 1_000) return;
-    syncing.current = true;
-    try {
-      await api.recordProgress(
-        activeLesson.id,
-        startMs,
-        endMs,
-        crypto.randomUUID().replaceAll("-", ""),
-      );
-      lastSentMs.current = endMs;
-      setSyncError(false);
-      await progress.refetch();
-    } catch {
-      setSyncError(true);
-    } finally {
-      syncing.current = false;
-    }
+  function refreshProgress() {
+    void queryClient.invalidateQueries({ queryKey: ["course-progress", course.id] });
   }
+  const liveLessons = apiCourse
+    ? apiCourse.lessons
+    : Array.from({ length: course.lessons }, (_, index) => ({
+        id: `demo-${index + 1}`,
+        title: index === 3 ? "Storage and state" : `Lesson ${index + 1}`,
+        position: index + 1,
+        required: true,
+        asset: null,
+      }));
   return (
     <div className="learning-layout">
       <aside className="lesson-sidebar">
@@ -753,97 +751,62 @@ function LearningCourse({ course, apiCourse }: { course: Course; apiCourse?: Api
         <div className="progress-bar">
           <span style={{ width: `${percentage}%` }} />
         </div>
-        {(
-          apiCourse?.lessons ??
-          Array.from({ length: course.lessons }, (_, index) => ({
-            id: `demo-${index + 1}`,
-            title: index === 3 ? "Storage and state" : `Lesson ${index + 1}`,
-            position: index + 1,
-            required: true,
-            video: null,
-          }))
-        ).map((lesson, index) => (
-          <button
-            className={
-              (
-                api.available
-                  ? progress.data?.lessons.find((item) => item.lessonId === lesson.id)?.complete
-                  : index < completed
-              )
-                ? "lesson-nav done"
-                : "lesson-nav"
-            }
-            type="button"
-            key={lesson.id}
-            onClick={() => {
-              setActiveLessonIndex(index);
-              lastSentMs.current = 0;
-              lastObservedMs.current = 0;
-            }}
-          >
-            <span>
-              {(
-                api.available
-                  ? progress.data?.lessons.find((item) => item.lessonId === lesson.id)?.complete
-                  : index < completed
-              ) ? (
-                <Check size={15} />
-              ) : (
-                String(lesson.position).padStart(2, "0")
+        {liveLessons.map((lesson, index) => {
+          const lessonProgress = api.available
+            ? progress.data?.lessons.find((item) => item.lessonId === lesson.id)
+            : undefined;
+          const done = api.available ? Boolean(lessonProgress?.complete) : index < completed;
+          return (
+            <button
+              className={done ? "lesson-nav done" : "lesson-nav"}
+              type="button"
+              key={lesson.id}
+              onClick={() => setActiveLessonIndex(index)}
+            >
+              <span>{done ? <Check size={15} /> : String(lesson.position).padStart(2, "0")}</span>{" "}
+              {lesson.title}
+              {api.available && lessonProgress && !done && (
+                <small className="muted"> · {lessonProgress.percentage}%</small>
               )}
-            </span>{" "}
-            {lesson.title}
-          </button>
-        ))}
+            </button>
+          );
+        })}
       </aside>
       <main className="lesson-main">
         <header className="learn-head">
           <Link to={`/courses/${course.id}`}>← Course overview</Link>
           <ProfileChip />
         </header>
-        {api.available && video.data?.url && video.data.captionsUrl ? (
-          <video
-            className="video-shell"
-            controls
-            src={video.data.url}
-            onPlay={(event) => {
-              const currentMs = Math.floor(event.currentTarget.currentTime * 1000);
-              lastSentMs.current = currentMs;
-              lastObservedMs.current = currentMs;
-            }}
-            onSeeking={(event) => {
-              const currentMs = Math.floor(event.currentTarget.currentTime * 1000);
-              lastSentMs.current = currentMs;
-              lastObservedMs.current = currentMs;
-            }}
-            onTimeUpdate={(event) => {
-              const currentMs = Math.floor(event.currentTarget.currentTime * 1000);
-              if (
-                currentMs < lastObservedMs.current ||
-                currentMs - lastObservedMs.current > 5_000
-              ) {
-                // Seeking starts a new contiguous segment; skipped time is never reported as watched.
-                lastSentMs.current = currentMs;
-              }
-              lastObservedMs.current = currentMs;
-              if (currentMs - lastSentMs.current >= 30_000) void syncVideoProgress(currentMs);
-            }}
-            onPause={(event) =>
-              void syncVideoProgress(Math.floor(event.currentTarget.currentTime * 1000))
-            }
-            onEnded={(event) =>
-              void syncVideoProgress(Math.floor(event.currentTarget.duration * 1000))
-            }
-          >
-            <track
-              kind="captions"
-              src={video.data.captionsUrl}
-              srcLang="zh-CN"
-              label="中文"
-              default
+        {api.available && activeLesson ? (
+          activeProgress?.contentKind === "DOCUMENT" ||
+          activeDetailLesson?.asset?.kind === "DOCUMENT" ? (
+            <DocumentLesson
+              key={activeLesson.id}
+              api={api}
+              lessonId={activeLesson.id}
+              fileName={activeLesson.title}
+              mimeType={activeDetailLesson?.asset?.detectedMimeType ?? null}
+              complete={Boolean(activeProgress?.complete)}
+              onProgressChanged={refreshProgress}
             />
-            Your browser does not support protected video playback.
-          </video>
+          ) : activeProgress?.contentKind === "VIDEO" ||
+            activeDetailLesson?.asset?.kind === "VIDEO" ? (
+            <VideoLessonPlayer
+              key={activeLesson.id}
+              api={api}
+              lessonId={activeLesson.id}
+              complete={Boolean(activeProgress?.complete)}
+              onProgressChanged={refreshProgress}
+            />
+          ) : (
+            <div className="video-shell">
+              <PlayCircle size={42} />
+              <span>No ready learning content</span>
+              <small>
+                This lesson has no READY video or document asset, so no learning session can start.
+              </small>
+            </div>
+          )
         ) : (
           <div
             className="video-shell"
@@ -851,33 +814,23 @@ function LearningCourse({ course, apiCourse }: { course: Course; apiCourse?: Api
             aria-label="Protected lesson player shell without a video preview"
           >
             <PlayCircle size={42} />
-            <span>
-              {video.isLoading ? "Checking course entitlement…" : "Protected lesson player"}
-            </span>
-            <small>
-              {api.available
-                ? "A signed video and caption track are available only to the verified purchasing wallet."
-                : "Demo shell only; no video is loaded."}
-            </small>
+            <span>Protected lesson player</span>
+            <small>Demo shell only; no video is loaded.</small>
           </div>
         )}
         <article className="lesson-content">
           <p className="eyebrow">LESSON {String(activeLessonIndex + 1).padStart(2, "0")}</p>
           <h2>{activeLesson?.title ?? "Storage and state"}</h2>
           <p>
-            State is an expensive, shared record. Treat a UI's local value as a request to read or
-            change state—not as proof that a contract accepted it.
+            Completion is recorded server-side only: verified video coverage or an explicit document
+            confirmation after successful access.
           </p>
           <div className="button-row">
             <Button
               className="secondary"
               type="button"
               disabled={activeLessonIndex === 0}
-              onClick={() => {
-                setActiveLessonIndex((value) => Math.max(0, value - 1));
-                lastSentMs.current = 0;
-                lastObservedMs.current = 0;
-              }}
+              onClick={() => setActiveLessonIndex((value) => Math.max(0, value - 1))}
             >
               Previous lesson
             </Button>
@@ -887,16 +840,18 @@ function LearningCourse({ course, apiCourse }: { course: Course; apiCourse?: Api
               onClick={() => setCompleted((value) => Math.min(course.lessons, value + 1))}
             >
               {api.available
-                ? "Live progress syncs from playback"
+                ? "Live progress syncs from verified sessions"
                 : completed >= course.lessons
                   ? "All required lessons complete"
                   : "Mark lesson complete (demo)"}
             </Button>
           </div>
-          {syncError && (
+          {api.available && progress.isError && (
             <p className="error" role="alert">
-              Progress was not accepted. Playback remains available; retry the segment before
-              leaving.
+              {apiErrorMessage(progress.error)}{" "}
+              <Button className="secondary" type="button" onClick={() => void progress.refetch()}>
+                Retry
+              </Button>
             </p>
           )}
           {percentage === 100 && (

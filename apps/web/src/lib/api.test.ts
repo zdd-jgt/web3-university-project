@@ -8,21 +8,29 @@ describe("UniversityApi", () => {
   });
 
   it("adds Privy bearer and active wallet headers to protected requests", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(
-        new Response(JSON.stringify({ url: "https://signed.example" }), { status: 200 }),
-      );
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          sessionId: "session-1",
+          lessonId: "lesson-1",
+          kind: "VIDEO",
+          url: "https://signed.example",
+          urlExpiresAt: "2026-08-17T00:00:00.000Z",
+          sessionExpiresAt: "2026-08-17T00:20:00.000Z",
+        }),
+        { status: 200 },
+      ),
+    );
     vi.stubGlobal("fetch", fetchMock);
     const api = new UniversityApi("https://api.example/", {
       getAccessToken: async () => "privy-token",
       wallet: "0x0000000000000000000000000000000000000001",
     });
 
-    await api.videoUrl("lesson-1");
+    await api.startLearningSession("lesson-1");
 
     expect(fetchMock).toHaveBeenCalledWith(
-      new URL("/v1/courses/lessons/lesson-1/video-url", "https://api.example/"),
+      new URL("/v1/lessons/lesson-1/learning-sessions", "https://api.example/"),
       expect.objectContaining({ headers: expect.any(Headers) }),
     );
     const headers = fetchMock.mock.calls[0][1].headers as Headers;
@@ -101,6 +109,35 @@ describe("UniversityApi", () => {
       parentId: "comment-1",
     });
     expect(JSON.parse(fetchMock.mock.calls[3][1].body)).toEqual({ hidden: true, reason: "spam" });
+  });
+
+  it("routes learning session, heartbeat and document confirmation calls", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockImplementation(async () => new Response(JSON.stringify({}), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const api = new UniversityApi("https://api.example/", {
+      getAccessToken: async () => "privy-token",
+      wallet: "0x0000000000000000000000000000000000000001",
+    });
+
+    await api.startLearningSession("lesson-1");
+    await api.learningHeartbeat("session-1", 3, 42_000);
+    await api.confirmDocumentRead("session-2");
+    await api.courseProgress("course-1");
+
+    const paths = fetchMock.mock.calls.map((call) => String(call[0]));
+    expect(paths).toEqual([
+      "https://api.example/v1/lessons/lesson-1/learning-sessions",
+      "https://api.example/v1/learning-sessions/session-1/heartbeats",
+      "https://api.example/v1/learning-sessions/session-2/document-confirmation",
+      "https://api.example/v1/courses/course-1/progress",
+    ]);
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({
+      sequence: 3,
+      positionMs: 42_000,
+    });
+    expect(fetchMock.mock.calls[1][1].method).toBe("POST");
   });
 
   it("raises an ApiRequestError with status and maps friendly messages", async () => {

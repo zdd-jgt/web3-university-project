@@ -81,10 +81,9 @@ describe("learning session boundary", () => {
       $executeRaw: async () => 1,
       learningSession: {
         updateMany: async () => ({ count: 0 }),
-        create: async () => session,
+        create: vi.fn(async () => session),
       },
     };
-    const markAccessed = vi.fn(async () => ({ count: 1 }));
     const prisma = {
       lesson: {
         findUnique: async () => ({
@@ -93,7 +92,6 @@ describe("learning session boundary", () => {
           asset,
         }),
       },
-      learningSession: { updateMany: markAccessed },
       $transaction: async (work: (client: typeof tx) => unknown) => work(tx),
     } as unknown as PrismaService;
     const entitlement = { assertPurchased: vi.fn(async () => undefined) } as EntitlementReader;
@@ -113,9 +111,48 @@ describe("learning session boundary", () => {
       disposition: "inline",
       fileName: "guide.pdf",
     });
-    expect(markAccessed).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { accessedAt: now } }),
+    expect(tx.learningSession.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ accessedAt: now }) }),
     );
+  });
+
+  it("keeps the existing active session untouched when signed URL preparation fails", async () => {
+    const signRead = vi.fn(async () => {
+      throw new Error("signer unavailable");
+    });
+    const transaction = vi.fn();
+    const prisma = {
+      lesson: {
+        findUnique: async () => ({
+          id: "lesson-video",
+          course: { status: "PUBLISHED", chainId: 31337, chainCourseId: "123" },
+          asset: {
+            id: "asset-video",
+            kind: "VIDEO",
+            status: "READY",
+            originalFileName: "lesson.mp4",
+            readyObjectKey: "ready/asset-video/v0.mp4",
+            detectedMimeType: "video/mp4",
+            sizeBytes: 1024n,
+            durationMs: 600_000,
+            readyAt: now,
+          },
+        }),
+      },
+      $transaction: transaction,
+    } as unknown as PrismaService;
+    const entitlement = { assertPurchased: vi.fn(async () => undefined) } as EntitlementReader;
+    const service = new LearningSessionsService(
+      prisma,
+      entitlement,
+      { signRead } as unknown as StorageSigner,
+      { now: () => now },
+    );
+
+    await expect(service.startSession("student-1", wallet, "lesson-video")).rejects.toThrow(
+      "signer unavailable",
+    );
+    expect(transaction).not.toHaveBeenCalled();
   });
 
   it("rejects a session reused by a different current wallet before any completion write", async () => {

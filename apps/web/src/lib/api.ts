@@ -20,7 +20,12 @@ export type ApiCourseDetail = ApiCourse & {
     title: string;
     position: number;
     required: boolean;
-    video: { durationMs: number; status: "PROCESSING" | "READY" } | null;
+    asset: {
+      kind: "VIDEO" | "DOCUMENT";
+      durationMs: number | null;
+      detectedMimeType: string | null;
+      status: LessonAssetStatus;
+    } | null;
   }>;
 };
 
@@ -150,6 +155,32 @@ export type ApiSession = {
   role: "STUDENT" | "TEACHER" | "ADMIN";
 };
 
+export type ApiLearningSession = {
+  sessionId: string;
+  lessonId: string;
+  kind: "VIDEO" | "DOCUMENT";
+  url: string;
+  urlExpiresAt: string;
+  sessionExpiresAt: string;
+};
+
+export type ApiCourseCompletionStatus = { id: string; status: string } | null;
+
+export type ApiHeartbeatResult = {
+  replayed: boolean;
+  accepted: boolean;
+  reason?: string;
+  eventId?: string;
+  coveredMs?: number;
+  lessonComplete?: boolean;
+  completion: ApiCourseCompletionStatus;
+};
+
+export type ApiDocumentConfirmation = {
+  lessonCompletionId: string;
+  completion: ApiCourseCompletionStatus;
+};
+
 export class ApiUnavailableError extends Error {}
 
 export class ApiRequestError extends Error {
@@ -256,21 +287,24 @@ export class UniversityApi {
   me() {
     return this.request<ApiSession>("/v1/profile/me", {}, true);
   }
-  videoUrl(lessonId: string) {
-    return this.request<{ url: string; captionsUrl?: string }>(
-      `/v1/courses/lessons/${encodeURIComponent(lessonId)}/video-url`,
-      {},
+  startLearningSession(lessonId: string) {
+    return this.request<ApiLearningSession>(
+      `/v1/lessons/${encodeURIComponent(lessonId)}/learning-sessions`,
+      { method: "POST" },
       true,
     );
   }
-  recordProgress(lessonId: string, startMs: number, endMs: number, idempotencyKey: string) {
-    return this.request(
-      `/v1/lessons/${encodeURIComponent(lessonId)}/progress`,
-      {
-        method: "POST",
-        headers: { "x-idempotency-key": idempotencyKey },
-        body: JSON.stringify({ startMs, endMs }),
-      },
+  learningHeartbeat(sessionId: string, sequence: number, positionMs: number) {
+    return this.request<ApiHeartbeatResult>(
+      `/v1/learning-sessions/${encodeURIComponent(sessionId)}/heartbeats`,
+      { method: "POST", body: JSON.stringify({ sequence, positionMs }) },
+      true,
+    );
+  }
+  confirmDocumentRead(sessionId: string) {
+    return this.request<ApiDocumentConfirmation>(
+      `/v1/learning-sessions/${encodeURIComponent(sessionId)}/document-confirmation`,
+      { method: "POST" },
       true,
     );
   }
@@ -283,6 +317,7 @@ export class UniversityApi {
       lessons: Array<{
         lessonId: string;
         position: number;
+        contentKind: "VIDEO" | "DOCUMENT" | null;
         watchedMs: number;
         durationMs: number;
         percentage: number;

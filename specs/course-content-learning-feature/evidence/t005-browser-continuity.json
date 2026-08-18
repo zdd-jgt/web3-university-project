@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "task": "T-005",
+  "executedAt": "2026-08-18T01:38:39.235Z",
+  "environment": {
+    "browser": "Codex in-app browser",
+    "viewport": "1440x900",
+    "webOrigin": "http://127.0.0.1:4173",
+    "mediaOrigin": "http://127.0.0.1:4174"
+  },
+  "fixture": {
+    "fileName": "2d游戏录屏2026-07-20-剪辑版.mp4",
+    "sizeBytes": 43828242,
+    "sha256": "899c6f91ab0757fc94d317d6437ed6a526a3100b9128f2d26043d5cf79dee4e0",
+    "durationSeconds": 13.666667
+  },
+  "assertion": {
+    "before": {
+      "session": 1,
+      "currentTimeSeconds": 1.039272,
+      "paused": false,
+      "readyState": 4
+    },
+    "after": {
+      "session": 2,
+      "currentTimeSeconds": 7.530306,
+      "paused": false,
+      "readyState": 1
+    },
+    "positionDeltaSeconds": 6.491034,
+    "passed": true,
+    "rule": "new credential URL is active, currentTime does not reset, and playback remains unpaused"
+  },
+  "visualEvidence": {
+    "path": "specs/course-content-learning-feature/evidence/t005-browser-renewal-real-mp4.png",
+    "sizeBytes": 156818,
+    "sha256": "ea152c12022dc09e3defdca7ab7b21f45a2e20acc0c5e204de7866a30e3889dd",
+    "candidateOnly": true
+  },
+  "failedAttempts": [
+    "Vite rooted at the monorepo could not resolve react/jsx-dev-runtime",
+    "two early samples missed a valid pre-renewal playing state and were not accepted as evidence"
+  ]
+}
