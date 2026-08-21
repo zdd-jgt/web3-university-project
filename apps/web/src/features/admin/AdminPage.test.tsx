@@ -56,7 +56,7 @@ describe("AdminPage", () => {
     apiMock.me.mockResolvedValue({ userId: "student-1", role: "STUDENT" });
     renderPage();
 
-    expect(await screen.findByText(/not authorized for the admin console/i)).toBeInTheDocument();
+    expect(await screen.findByText(/无权使用管理控制台/)).toBeInTheDocument();
     expect(apiMock.teacherApplicationQueue).not.toHaveBeenCalled();
     expect(apiMock.courseReviewQueue).not.toHaveBeenCalled();
     expect(apiMock.commentReviewQueue).not.toHaveBeenCalled();
@@ -66,7 +66,7 @@ describe("AdminPage", () => {
     runtimeMock.isDemo = true;
     runtimeMock.reason = "VITE_SEPOLIA_RPC_URL is not configured";
     renderPage();
-    expect(await screen.findByText(/Demo mode/)).toBeInTheDocument();
+    expect(await screen.findByText(/演示模式/)).toBeInTheDocument();
     expect(apiMock.teacherApplicationQueue).not.toHaveBeenCalled();
   });
 
@@ -86,7 +86,7 @@ describe("AdminPage", () => {
     apiMock.reviewTeacherApplication.mockResolvedValue({ id: "application-1" });
     renderPage();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Approve" }));
+    fireEvent.click(await screen.findByRole("button", { name: "批准" }));
     await waitFor(() =>
       expect(apiMock.reviewTeacherApplication).toHaveBeenCalledWith("application-1", true),
     );
@@ -125,9 +125,9 @@ describe("AdminPage", () => {
     });
     renderPage();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Approve submission" }));
+    fireEvent.click(await screen.findByRole("button", { name: "批准提交" }));
     await waitFor(() => expect(apiMock.reviewCourse).toHaveBeenCalledWith("course-1", true));
-    expect(await screen.findByText("ONCHAIN PUBLICATION PACKAGE")).toBeInTheDocument();
+    expect(await screen.findByText("链上发布包")).toBeInTheDocument();
   });
 
   it("hides a visible comment with a moderation reason through the API", async () => {
@@ -155,10 +155,10 @@ describe("AdminPage", () => {
     });
     renderPage();
 
-    fireEvent.change(await screen.findByLabelText("Moderation reason"), {
+    fireEvent.change(await screen.findByLabelText("审核原因"), {
       target: { value: "spam" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Hide" }));
+    fireEvent.click(screen.getByRole("button", { name: "隐藏" }));
     await waitFor(() =>
       expect(apiMock.moderateComment).toHaveBeenCalledWith("course-1", "comment-9", true, "spam"),
     );
@@ -183,10 +183,8 @@ describe("AdminPage", () => {
     ]);
     renderPage();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Hide" }));
-    expect(
-      await screen.findByText(/moderation reason of at least 3 characters/),
-    ).toBeInTheDocument();
+    fireEvent.click(await screen.findByRole("button", { name: "隐藏" }));
+    expect(await screen.findByText(/请填写至少 3 个字符的审核原因/)).toBeInTheDocument();
     expect(apiMock.moderateComment).not.toHaveBeenCalled();
   });
 });

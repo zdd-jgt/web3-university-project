@@ -2,7 +2,7 @@
 
 Five non-upgradeable contracts implement the onchain boundary:
 
-- `YDToken`: fixed 1,000,000 YD supply, minted once to Treasury.
+- `YDToken`: fixed 80,000,000 YD supply, minted once to Treasury.
 - `CourseCatalog`: admin-controlled purchase configuration and metadata commitment.
 - `CourseMarket`: approve + buy flow, exact-price/deadline checks and atomic 75/25 payout.
 - `CertificateSBT`: worker-only, purchase-gated, one non-transferable certificate per wallet/course.

@@ -6,7 +6,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 /// @title YiDeng Token
 /// @notice Fixed-supply course payment token. There is deliberately no mint function.
 contract YDToken is ERC20 {
-    uint256 public constant INITIAL_SUPPLY = 1_000_000 ether;
+    uint256 public constant INITIAL_SUPPLY = 80_000_000 ether;
 
     error ZeroTreasury();
 
@@ -15,4 +15,3 @@ contract YDToken is ERC20 {
         _mint(treasury, INITIAL_SUPPLY);
     }
 }
-

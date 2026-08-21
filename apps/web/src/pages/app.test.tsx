@@ -14,8 +14,8 @@ describe("course catalog", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByLabelText("Filter by level")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Solidity Foundations" })).toHaveAttribute(
+    expect(screen.getByLabelText("按级别筛选")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Solidity 基础" })).toHaveAttribute(
       "href",
       "/courses/solidity-basics",
     );

@@ -6,6 +6,7 @@ import { usePublicClient, useWriteContract } from "wagmi";
 import { PageIntro } from "../../components/layout";
 import { Button, Card, Field } from "../../components/ui";
 import { contractAddresses, erc20ApprovalAbi, sepoliaChainId } from "../../lib/chain";
+import { formatZhNumber } from "../../lib/localization";
 import { runtime, useWalletSession } from "../../lib/runtime";
 import {
   deadlineFrom,
@@ -42,6 +43,7 @@ function assetLabel(asset: SwapAsset) {
 
 function swapErrorMessage(error: unknown): string {
   if (error instanceof Error) {
+    if (/[一-鿿]/.test(error.message)) return error.message;
     if (/user rejected|denied/i.test(error.message)) return "你取消了钱包请求，没有继续发送交易。";
     if (/allowance|approve/i.test(error.message)) return "授权尚未生效，请确认交易后重试。";
     if (/insufficient funds|exceeds balance/i.test(error.message))
@@ -61,7 +63,7 @@ function formatTokenAmount(
   if (amount === undefined) return "—";
   const value = Number(formatUnits(amount, decimals));
   return Number.isFinite(value)
-    ? value.toLocaleString(undefined, { maximumFractionDigits })
+    ? formatZhNumber(value, { maximumFractionDigits })
     : formatUnits(amount, decimals);
 }
 
@@ -83,7 +85,7 @@ export function SwapPage() {
   const quote = useQuery({
     queryKey: ["uniswap-v4-quote", pool?.poolId, amountIn?.toString()],
     queryFn: async () => {
-      if (!publicClient || !pool || !amountIn) throw new Error("Swap configuration is incomplete.");
+      if (!publicClient || !pool || !amountIn) throw new Error("兑换配置不完整。");
       return quoteExactInput(publicClient, pool, amountIn, wallet.address);
     },
     enabled: quoteEnabled,
@@ -96,7 +98,7 @@ export function SwapPage() {
     queryKey: ["uniswap-v4-authorization", wallet.address, amountIn?.toString()],
     queryFn: async () => {
       if (!publicClient || !wallet.address || !amountIn) {
-        throw new Error("Wallet authorization cannot be read.");
+        throw new Error("无法读取钱包授权。");
       }
       const [tokenAllowance, permitAllowance] = await Promise.all([
         publicClient.readContract({
@@ -151,7 +153,7 @@ export function SwapPage() {
   const canQuote = quoteEnabled && !quote.isError;
 
   async function confirmTransaction(hash: Hash, failureMessage: string) {
-    if (!publicClient) throw new Error("Sepolia RPC is unavailable.");
+    if (!publicClient) throw new Error("Sepolia RPC 不可用。");
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     if (receipt.status !== "success") throw new Error(failureMessage);
   }
@@ -159,7 +161,7 @@ export function SwapPage() {
   async function authorizeTestUsdt() {
     try {
       if (!publicClient || !wallet.address || !amountIn || asset !== "test-usdt") {
-        throw new Error("Connect a Sepolia wallet and enter a valid amount first.");
+        throw new Error("请先连接 Sepolia 钱包并输入有效数量。");
       }
       setAction({ phase: "authorizing", message: "正在检查 Test USDT 授权…" });
       let tokenAllowance = await publicClient.readContract({
@@ -177,7 +179,7 @@ export function SwapPage() {
           functionName: "approve",
           args: [UNISWAP_V4_SEPOLIA.permit2, 0n],
         });
-        await confirmTransaction(resetHash, "The Test USDT allowance reset reverted.");
+        await confirmTransaction(resetHash, "Test USDT 授权清零交易已回滚。");
         tokenAllowance = 0n;
       }
       if (tokenAllowance < amountIn) {
@@ -189,7 +191,7 @@ export function SwapPage() {
           functionName: "approve",
           args: [UNISWAP_V4_SEPOLIA.permit2, amountIn],
         });
-        await confirmTransaction(approvalHash, "The Test USDT approval reverted.");
+        await confirmTransaction(approvalHash, "Test USDT 授权交易已回滚。");
       }
 
       const permitAllowance = await publicClient.readContract({
@@ -211,7 +213,7 @@ export function SwapPage() {
           functionName: "approve",
           args: [TEST_USDT_ADDRESS, UNISWAP_V4_SEPOLIA.universalRouter, amountIn, expiration],
         });
-        await confirmTransaction(permitHash, "The Permit2 approval reverted.");
+        await confirmTransaction(permitHash, "Permit2 授权交易已回滚。");
       }
       await authorization.refetch();
       setAction({ phase: "idle", message: "Test USDT 授权已确认，可以兑换。" });
@@ -223,11 +225,11 @@ export function SwapPage() {
   async function executeSwap() {
     try {
       if (!publicClient || !wallet.address || !pool || !amountIn || slippageBps === null) {
-        throw new Error("Connect a Sepolia wallet and enter valid swap settings first.");
+        throw new Error("请先连接 Sepolia 钱包并填写有效的兑换参数。");
       }
       if (asset === "test-usdt") {
         const freshAuthorization = await authorization.refetch();
-        if (!freshAuthorization.data?.ready) throw new Error("Test USDT allowance is incomplete.");
+        if (!freshAuthorization.data?.ready) throw new Error("Test USDT 授权不完整。");
       }
       setAction({ phase: "swapping", message: "正在重新读取链上报价…" });
       const freshQuote = await quoteExactInput(publicClient, pool, amountIn, wallet.address);
@@ -243,7 +245,7 @@ export function SwapPage() {
         args: [plan.commands, [...plan.inputs], deadline],
         value: asset === "sepolia-eth" ? amountIn : 0n,
       });
-      await confirmTransaction(hash, "The Uniswap swap reverted.");
+      await confirmTransaction(hash, "Uniswap 兑换交易已回滚。");
       await quote.refetch();
       if (asset === "test-usdt") await authorization.refetch();
       setAction({ phase: "success", message: "兑换交易已在 Sepolia 确认。", hash });
@@ -333,7 +335,7 @@ export function SwapPage() {
             <dt>当前报价</dt>
             <dd>
               {rate > 0
-                ? `1 ${assetLabel(asset)} ≈ ${rate.toLocaleString(undefined, { maximumFractionDigits: 6 })} YD`
+                ? `1 ${assetLabel(asset)} ≈ ${formatZhNumber(rate, { maximumFractionDigits: 6 })} YD`
                 : "—"}
             </dd>
           </div>

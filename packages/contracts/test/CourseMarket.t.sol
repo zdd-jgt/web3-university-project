@@ -130,6 +130,6 @@ contract CourseMarketTest is Test {
         uint256 paidTreasury = token.balanceOf(treasury) - treasuryBefore;
         assertEq(paidTeacher + paidTreasury, fuzzPrice);
         assertEq(paidTeacher, (fuzzPrice * 7_500) / 10_000);
-        assertEq(token.totalSupply(), 1_000_000 ether);
+        assertEq(token.totalSupply(), 80_000_000 ether);
     }
 }

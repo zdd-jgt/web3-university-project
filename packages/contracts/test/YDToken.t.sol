@@ -13,7 +13,7 @@ contract YDTokenTest is Test {
         assertEq(token.name(), "YiDeng Token");
         assertEq(token.symbol(), "YD");
         assertEq(token.decimals(), 18);
-        assertEq(token.totalSupply(), 1_000_000 ether);
+        assertEq(token.totalSupply(), 80_000_000 ether);
         assertEq(token.balanceOf(treasury), token.INITIAL_SUPPLY());
     }
 
@@ -22,4 +22,3 @@ contract YDTokenTest is Test {
         new YDToken(address(0));
     }
 }
-

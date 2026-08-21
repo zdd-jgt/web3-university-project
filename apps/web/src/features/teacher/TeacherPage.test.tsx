@@ -74,16 +74,16 @@ describe("TeacherPage", () => {
     apiMock.myTeacherApplications.mockResolvedValue([]);
     renderPage();
 
-    expect(await screen.findByLabelText(/Teaching statement/)).toBeInTheDocument();
+    expect(await screen.findByLabelText(/教学陈述/)).toBeInTheDocument();
     expect(apiMock.myCourses).not.toHaveBeenCalled();
-    expect(screen.queryByText("New course draft")).not.toBeInTheDocument();
+    expect(screen.queryByText("新建课程草稿")).not.toBeInTheDocument();
   });
 
   it("fails closed with a labelled notice in demo mode", async () => {
     runtimeMock.isDemo = true;
     runtimeMock.reason = "VITE_PRIVY_APP_ID is not configured";
     renderPage();
-    expect(await screen.findByText(/Demo mode/)).toBeInTheDocument();
+    expect(await screen.findByText(/演示模式/)).toBeInTheDocument();
     expect(apiMock.myCourses).not.toHaveBeenCalled();
   });
 
@@ -93,8 +93,8 @@ describe("TeacherPage", () => {
     apiMock.applyTeacher.mockResolvedValue({ id: "application-1" });
     renderPage();
 
-    const statement = await screen.findByLabelText(/Teaching statement/);
-    const submit = screen.getByRole("button", { name: "Submit for review" });
+    const statement = await screen.findByLabelText(/教学陈述/);
+    const submit = screen.getByRole("button", { name: "提交审核" });
     expect(submit).toBeDisabled();
 
     fireEvent.change(statement, {
@@ -123,11 +123,11 @@ describe("TeacherPage", () => {
     apiMock.myCourses.mockResolvedValue([draftCourse]);
     renderPage();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Manage" }));
+    fireEvent.click(await screen.findByRole("button", { name: "管理" }));
 
     const gate = await screen.findByRole("alert");
-    expect(gate).toHaveTextContent("READY protected asset");
-    expect(screen.getByRole("button", { name: "Submit publication request" })).toBeDisabled();
+    expect(gate).toHaveTextContent("就绪（READY）的受保护资产");
+    expect(screen.getByRole("button", { name: "提交发布申请" })).toBeDisabled();
   });
 });
 
@@ -167,7 +167,7 @@ async function openDraftEditor(lessons: ApiTeacherLesson[]) {
   apiMock.myTeacherApplications.mockResolvedValue([approvedApplication]);
   apiMock.myCourses.mockResolvedValue([{ ...draftCourse, lessons }]);
   renderPage();
-  fireEvent.click(await screen.findByRole("button", { name: "Manage" }));
+  fireEvent.click(await screen.findByRole("button", { name: "管理" }));
 }
 
 describe("Lesson asset upload and statuses", () => {
@@ -185,11 +185,11 @@ describe("Lesson asset upload and statuses", () => {
 
   it("rejects unsupported file types before requesting an upload session", async () => {
     await openDraftEditor(draftCourse.lessons);
-    const input = await screen.findByLabelText("Upload asset for lesson Lesson 1");
+    const input = await screen.findByLabelText("为课时 Lesson 1 上传资产");
     const bad = new File(["payload"], "tool.exe", { type: "application/x-msdownload" });
     fireEvent.change(input, { target: { files: [bad] } });
 
-    expect(await screen.findByText(/Only MP4 video/)).toBeInTheDocument();
+    expect(await screen.findByText(/仅接受 MP4 视频/)).toBeInTheDocument();
     expect(apiMock.createUploadSession).not.toHaveBeenCalled();
   });
 
@@ -227,7 +227,7 @@ describe("Lesson asset upload and statuses", () => {
     apiMock.assetStatus.mockResolvedValue(processingStatus);
     await openDraftEditor(draftCourse.lessons);
 
-    const input = await screen.findByLabelText("Upload asset for lesson Lesson 1");
+    const input = await screen.findByLabelText("为课时 Lesson 1 上传资产");
     const clip = new File([new Uint8Array(64)], "clip.mp4", { type: "video/mp4" });
     fireEvent.change(input, { target: { files: [clip] } });
 
@@ -244,7 +244,7 @@ describe("Lesson asset upload and statuses", () => {
       expect.objectContaining({ method: "PUT", body: clip }),
     );
     await waitFor(() => expect(apiMock.finalizeAsset).toHaveBeenCalledWith("asset-1"));
-    expect(await screen.findByText(/Processing started/)).toBeInTheDocument();
+    expect(await screen.findByText(/已开始处理/)).toBeInTheDocument();
 
     // The status poll flips to READY and refreshes the course list through onChanged.
     await waitFor(() => expect(apiMock.assetStatus).toHaveBeenCalledWith("asset-1"));
@@ -304,13 +304,15 @@ describe("Lesson asset upload and statuses", () => {
     ]);
 
     expect(await screen.findByText("Uploading lesson")).toBeInTheDocument();
-    expect(screen.getAllByText("UPLOADING").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("PROCESSING").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("READY").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("FAILED").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("上传中").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("处理中").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("就绪").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("失败").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText(/视频验真失败（PROBE_FAILED）/)).toBeInTheDocument();
+    expect(screen.getByText(/处理失败（诊断码：UPLOAD_TIMEOUT）/)).toBeInTheDocument();
 
     // UPLOAD_-prefixed failures require a fresh upload, so only PROBE_FAILED is retryable.
-    const retryButtons = screen.getAllByRole("button", { name: "Retry processing" });
+    const retryButtons = screen.getAllByRole("button", { name: "重试处理" });
     expect(retryButtons).toHaveLength(1);
     fireEvent.click(retryButtons[0]);
     await waitFor(() => expect(apiMock.retryAsset).toHaveBeenCalledWith("asset-fail"));

@@ -12,6 +12,7 @@ import {
   type UniversityApi,
   useUniversityApi,
 } from "../../lib/api";
+import { assetFailureLabel, formatZhDateTime } from "../../lib/localization";
 import { runtime, useWalletSession } from "../../lib/runtime";
 
 const PRICE_PATTERN = /^(?:0|[1-9]\d*)(?:\.\d{1,18})?$/;
@@ -28,11 +29,24 @@ const DOCUMENT_MIME_TYPES = new Map([
 ]);
 
 const COURSE_STATUS_LABEL: Record<ApiCourseStatus, string> = {
-  DRAFT: "Draft",
-  PENDING_REVIEW: "Pending review",
-  APPROVED: "Approved",
-  PUBLISHED: "Published",
-  ARCHIVED: "Archived",
+  DRAFT: "草稿",
+  PENDING_REVIEW: "待审核",
+  APPROVED: "已批准",
+  PUBLISHED: "已发布",
+  ARCHIVED: "已归档",
+};
+
+const ASSET_STATUS_LABEL: Record<LessonAssetStatus, string> = {
+  UPLOADING: "上传中",
+  PROCESSING: "处理中",
+  READY: "就绪",
+  FAILED: "失败",
+};
+
+const APPLICATION_STATUS_LABEL: Record<"PENDING" | "APPROVED" | "REJECTED", string> = {
+  PENDING: "待审核",
+  APPROVED: "已通过",
+  REJECTED: "已拒绝",
 };
 
 function courseStatusTone(status: ApiCourseStatus): "neutral" | "success" | "warning" | "error" {
@@ -58,26 +72,25 @@ export function TeacherPage() {
     enabled: canAct,
   });
   const blockedReason = runtime.isDemo
-    ? `Demo mode: ${runtime.reason}. Teacher forms require a live Privy session and API.`
+    ? `演示模式：${runtime.reason}。教师表单需要真实的 Privy 会话与 API。`
     : !api.available
-      ? "VITE_API_BASE_URL is not configured, so teacher forms cannot call the API."
+      ? "VITE_API_BASE_URL 未配置，教师表单无法调用 API。"
       : !wallet.authenticated
-        ? "Sign in with Privy before using the teacher studio."
+        ? "请先通过 Privy 登录，再使用教师工作台。"
         : !wallet.address
-          ? "Connect a wallet before using the teacher studio."
+          ? "请先连接钱包，再使用教师工作台。"
           : "";
   return (
     <div className="page">
-      <PageIntro eyebrow="TEACHER STUDIO" title="Create coursework with a review boundary.">
-        Publishing, price changes and access changes remain admin-reviewed actions. The server
-        verifies your teacher role; this page never grants it.
+      <PageIntro eyebrow="教师工作台" title="在审核边界内创建课程内容。">
+        发布、改价与访问权限变更仍需管理员审核。服务端会核验你的教师角色，本页面本身不会授予该角色。
       </PageIntro>
       {!canAct ? (
         <Card className="empty-state">
           <TriangleAlert size={18} aria-hidden="true" /> {blockedReason}
         </Card>
       ) : session.isLoading ? (
-        <Card className="empty-state">Checking your server role…</Card>
+        <Card className="empty-state">正在核验你的服务端角色…</Card>
       ) : session.isError ? (
         <Card className="empty-state">
           <TriangleAlert size={18} aria-hidden="true" /> {apiErrorMessage(session.error)}
@@ -116,24 +129,21 @@ function TeacherStudio({
     <>
       <ApplicationSection api={api} />
       {!canManageCourses ? (
-        <Card className="empty-state">
-          Course management unlocks only after the server grants the TEACHER role.
-        </Card>
+        <Card className="empty-state">课程管理只有在服务端授予教师角色后才会解锁。</Card>
       ) : (
         <section className="detail-grid">
           <CreateCourseCard api={api} onCreated={refreshCourses} />
           <Card>
-            <h2>Your courses</h2>
+            <h2>你的课程</h2>
             {courses.isLoading ? (
-              <p className="muted">Loading your courses…</p>
+              <p className="muted">正在加载你的课程…</p>
             ) : courses.isError ? (
               <p className="error" role="alert">
                 {apiErrorMessage(courses.error)}
               </p>
             ) : !courses.data?.length ? (
               <p className="muted">
-                No courses yet. A draft becomes reviewable after every required lesson has a READY
-                protected asset.
+                还没有课程。当每个必修课时都拥有就绪（READY）的受保护资产后，草稿即可提交审核。
               </p>
             ) : (
               courses.data.map((course) => (
@@ -141,10 +151,9 @@ function TeacherStudio({
                   <div>
                     <strong>{course.title}</strong>
                     <p className="muted">
-                      {course.lessons.length} lessons · updated{" "}
-                      {new Date(course.updatedAt).toLocaleString()}
+                      {course.lessons.length} 个课时 · 更新于 {formatZhDateTime(course.updatedAt)}
                       {course.requestedPriceYD
-                        ? ` · proposed ${formatYD(course.requestedPriceYD)} YD`
+                        ? ` · 申报 ${formatYD(course.requestedPriceYD)} YD`
                         : ""}
                     </p>
                   </div>
@@ -159,7 +168,7 @@ function TeacherStudio({
                         setSelectedCourseId((current) => (current === course.id ? null : course.id))
                       }
                     >
-                      {selectedCourseId === course.id ? "Close editor" : "Manage"}
+                      {selectedCourseId === course.id ? "关闭编辑器" : "管理"}
                     </Button>
                   )}
                 </div>
@@ -204,9 +213,9 @@ function ApplicationSection({ api }: { api: UniversityApi }) {
 
   return (
     <Card>
-      <h2>Teacher application</h2>
+      <h2>教师申请</h2>
       {applications.isLoading ? (
-        <p className="muted">Checking your application history…</p>
+        <p className="muted">正在查询你的申请记录…</p>
       ) : (
         applications.data?.map((application) => (
           <div className="row spread" key={application.id}>
@@ -224,30 +233,28 @@ function ApplicationSection({ api }: { api: UniversityApi }) {
                     : "warning"
               }
             >
-              {application.status}
+              {APPLICATION_STATUS_LABEL[application.status] ??
+                `未知申请状态（${application.status}）`}
             </Status>
           </div>
         ))
       )}
       {isApproved && (
         <p className="success-text" role="status">
-          Your teacher status is approved. Draft courses below can be submitted for publication
-          review.
+          你的教师身份已通过审核，下方的课程草稿可以提交发布审核。
         </p>
       )}
-      {hasPending && (
-        <p className="muted">An application is pending admin review. No resubmission is needed.</p>
-      )}
+      {hasPending && <p className="muted">已有一份申请正在等待管理员审核，无需重复提交。</p>}
       {showForm && (
         <>
           <label className="field" htmlFor="teacher-statement">
-            <span>Teaching statement</span>
+            <span>教学陈述</span>
             <textarea
               id="teacher-statement"
               value={statement}
               onChange={(event) => setStatement(event.target.value)}
               rows={4}
-              placeholder="Describe your teaching focus, experience and course plans (at least 20 characters)."
+              placeholder="请描述你的教学重点、经验与课程规划（至少 20 个字符）。"
             />
             <small
               className={
@@ -255,8 +262,8 @@ function ApplicationSection({ api }: { api: UniversityApi }) {
               }
             >
               {statement.trim().length < 20
-                ? `${statement.trim().length}/20 minimum characters.`
-                : "Admin review is required before course publishing."}
+                ? `已输入 ${statement.trim().length}/20 个字符（最少要求）。`
+                : "课程发布前需经管理员审核。"}
             </small>
           </label>
           <Button
@@ -264,7 +271,7 @@ function ApplicationSection({ api }: { api: UniversityApi }) {
             disabled={phase === "submitting" || statement.trim().length < 20}
             onClick={() => void submit()}
           >
-            {phase === "submitting" ? "Submitting…" : "Submit for review"}
+            {phase === "submitting" ? "正在提交…" : "提交审核"}
           </Button>
           {error && (
             <p className="error" role="alert">
@@ -303,23 +310,23 @@ function CreateCourseCard({ api, onCreated }: { api: UniversityApi; onCreated: (
 
   return (
     <Card>
-      <h2>New course draft</h2>
+      <h2>新建课程草稿</h2>
       <Field
-        label="Course title"
+        label="课程标题"
         id="new-course-title"
         value={title}
         maxLength={160}
         onChange={(event) => setTitle(event.target.value)}
-        placeholder="e.g. A practical ERC-20"
+        placeholder="例如：实战 ERC-20"
       />
       <label className="field" htmlFor="new-course-description">
-        <span>Description</span>
+        <span>课程描述</span>
         <textarea
           id="new-course-description"
           value={description}
           onChange={(event) => setDescription(event.target.value)}
           rows={5}
-          placeholder="What will learners build and verify?"
+          placeholder="学员将构建并验证什么？"
         />
       </label>
       <Button
@@ -327,11 +334,11 @@ function CreateCourseCard({ api, onCreated }: { api: UniversityApi; onCreated: (
         disabled={phase === "saving" || !title.trim() || !description.trim()}
         onClick={() => void create()}
       >
-        {phase === "saving" ? "Creating…" : "Create draft"}
+        {phase === "saving" ? "正在创建…" : "创建草稿"}
       </Button>
       {savedTitle && (
         <p className="success-text" role="status">
-          Draft “{savedTitle}” created. Add required lessons and protected assets before submitting.
+          草稿“{savedTitle}”已创建。提交前请添加必修课时与受保护资产。
         </p>
       )}
       {error && (
@@ -355,15 +362,15 @@ function DraftEditor({
   return (
     <>
       <Card>
-        <h2>Edit draft: {course.title}</h2>
+        <h2>编辑草稿：{course.title}</h2>
         <DraftMetadataForm api={api} course={course} onChanged={onChanged} />
-        <h2>Lessons</h2>
+        <h2>课时列表</h2>
         {course.lessons.length ? (
           course.lessons.map((lesson) => (
             <LessonRow key={lesson.id} api={api} lesson={lesson} onChanged={onChanged} />
           ))
         ) : (
-          <p className="muted">No lessons yet. At least one required lesson is mandatory.</p>
+          <p className="muted">还没有课时，至少需要一个必修课时。</p>
         )}
         <AddLessonForm api={api} course={course} onChanged={onChanged} />
       </Card>
@@ -406,7 +413,7 @@ function DraftMetadataForm({
   return (
     <>
       <Field
-        label="Title"
+        label="标题"
         id={`draft-title-${course.id}`}
         value={title}
         maxLength={160}
@@ -416,7 +423,7 @@ function DraftMetadataForm({
         }}
       />
       <label className="field" htmlFor={`draft-description-${course.id}`}>
-        <span>Description</span>
+        <span>课程描述</span>
         <textarea
           id={`draft-description-${course.id}`}
           value={description}
@@ -426,7 +433,7 @@ function DraftMetadataForm({
           }}
           rows={4}
         />
-        <small className="muted">Saving clears any unreviewed publication request fields.</small>
+        <small className="muted">保存后会清空尚未审核的发布申请字段。</small>
       </label>
       <Button
         type="button"
@@ -434,11 +441,11 @@ function DraftMetadataForm({
         disabled={phase === "saving" || !dirty || !title.trim() || !description.trim()}
         onClick={() => void save()}
       >
-        {phase === "saving" ? "Saving…" : "Save draft changes"}
+        {phase === "saving" ? "正在保存…" : "保存草稿修改"}
       </Button>
       {saved && (
         <p className="success-text" role="status">
-          Draft saved.
+          草稿已保存。
         </p>
       )}
       {error && (
@@ -483,10 +490,10 @@ function LessonRow({
       <div>
         <strong>{lesson.title}</strong>
         <small>
-          {lesson.required ? "Required" : "Optional"}
+          {lesson.required ? "必修" : "选修"}
           {asset
-            ? ` · ${asset.status}${asset.durationMs ? ` · ${Math.ceil(asset.durationMs / 60_000)} min` : ""}${asset.failureCode ? ` · ${asset.failureCode}` : ""}`
-            : " · no asset yet"}
+            ? ` · ${ASSET_STATUS_LABEL[asset.status]}${asset.durationMs ? ` · ${Math.ceil(asset.durationMs / 60_000)} 分钟` : ""}${asset.failureCode ? ` · ${assetFailureLabel(asset.failureCode)}` : ""}`
+            : " · 暂无资产"}
         </small>
         {retryError && (
           <small className="error" role="alert">
@@ -496,10 +503,10 @@ function LessonRow({
       </div>
       {asset ? (
         <div className="row">
-          <Status tone={assetStatusTone(asset.status)}>{asset.status}</Status>
+          <Status tone={assetStatusTone(asset.status)}>{ASSET_STATUS_LABEL[asset.status]}</Status>
           {retryable && (
             <Button className="secondary" type="button" onClick={() => void retry()}>
-              Retry processing
+              重试处理
             </Button>
           )}
         </div>
@@ -545,9 +552,7 @@ function LessonUpload({
       file.type === "video/mp4" ? "VIDEO" : DOCUMENT_MIME_TYPES.has(file.type) ? "DOCUMENT" : null;
     if (!kind) {
       setPhase("failed");
-      setError(
-        "Only MP4 video or supported document types (pdf, docx, pptx, xlsx, txt) are accepted.",
-      );
+      setError("仅接受 MP4 视频或支持的文档类型（pdf、docx、pptx、xlsx、txt）。");
       return;
     }
     try {
@@ -565,7 +570,7 @@ function LessonUpload({
         headers: { ...session.requiredHeaders, "content-type": file.type },
         body: file,
       });
-      if (!put.ok) throw new Error(`Storage upload failed (HTTP ${put.status}).`);
+      if (!put.ok) throw new Error(`存储上传失败（HTTP ${put.status}）。`);
       setPhase("finalizing");
       await api.finalizeAsset(session.assetId);
       setPhase("processing");
@@ -582,9 +587,9 @@ function LessonUpload({
     <div>
       <label className="upload-zone">
         <UploadCloud />
-        <span>{busy ? phaseLabel(phase) : "Upload lesson asset"}</span>
+        <span>{busy ? phaseLabel(phase) : "上传课时资产"}</span>
         <input
-          aria-label={`Upload asset for lesson ${lesson.title}`}
+          aria-label={`为课时 ${lesson.title} 上传资产`}
           type="file"
           accept="video/mp4,.pdf,.docx,.pptx,.xlsx,.txt"
           disabled={busy}
@@ -597,7 +602,7 @@ function LessonUpload({
       </label>
       {phase === "processing" && (
         <p className="muted" role="status">
-          Processing started. Status refreshes automatically.
+          已开始处理，状态会自动刷新。
         </p>
       )}
       {error && (
@@ -610,10 +615,10 @@ function LessonUpload({
 }
 
 function phaseLabel(phase: string): string {
-  if (phase === "requesting") return "Requesting upload session…";
-  if (phase === "uploading") return "Uploading to protected storage…";
-  if (phase === "finalizing") return "Confirming upload…";
-  return "Working…";
+  if (phase === "requesting") return "正在申请上传会话…";
+  if (phase === "uploading") return "正在上传到受保护存储…";
+  if (phase === "finalizing") return "正在确认上传…";
+  return "处理中…";
 }
 
 function AddLessonForm({
@@ -648,12 +653,12 @@ function AddLessonForm({
   return (
     <div className="detail-grid">
       <Field
-        label="New lesson title"
+        label="新课时标题"
         id={`lesson-title-${course.id}`}
         value={title}
         maxLength={160}
         onChange={(event) => setTitle(event.target.value)}
-        hint={`It will be appended as lesson ${position}.`}
+        hint={`将作为第 ${position} 个课时追加。`}
       />
       <div>
         <label className="admin-checks" htmlFor={`lesson-required-${course.id}`}>
@@ -663,14 +668,14 @@ function AddLessonForm({
             checked={required}
             onChange={(event) => setRequired(event.target.checked)}
           />{" "}
-          Required for completion
+          完成课程所需
         </label>
         <Button
           type="button"
           disabled={phase === "saving" || !title.trim()}
           onClick={() => void add()}
         >
-          {phase === "saving" ? "Adding…" : "Add lesson"}
+          {phase === "saving" ? "正在添加…" : "添加课时"}
         </Button>
         {error && (
           <p className="error" role="alert">
@@ -724,47 +729,43 @@ function PublicationForm({
 
   return (
     <Card>
-      <h2>Submit “{course.title}” for publication review</h2>
+      <h2>提交“{course.title}”进入发布审核</h2>
       {!readyGate && (
         <p className="error" role="alert">
-          Every required lesson needs a READY protected asset before submission. Current:{" "}
+          提交前，每个必修课时都需要就绪（READY）的受保护资产。当前：{" "}
           {requiredLessons.length === 0
-            ? "no required lessons"
-            : `${requiredLessons.filter((lesson) => lesson.asset?.status === "READY").length}/${requiredLessons.length} ready`}
-          .
+            ? "没有必修课时"
+            : `${requiredLessons.filter((lesson) => lesson.asset?.status === "READY").length}/${requiredLessons.length} 个已就绪`}
+          。
         </p>
       )}
       <section className="detail-grid">
         <Field
-          label="Proposed price in YD"
+          label="申报价格（YD）"
           id={`submit-price-${course.id}`}
           value={priceYD}
           inputMode="decimal"
           onChange={(event) => setPriceYD(event.target.value)}
-          hint="Decimal string, e.g. 60. Admin review is required before on-chain publication."
-          error={
-            priceYD && !priceValid
-              ? "Enter a positive decimal amount (max 18 decimals)."
-              : undefined
-          }
+          hint="十进制数字，例如 60。链上发布前需经管理员审核。"
+          error={priceYD && !priceValid ? "请输入正数金额（最多 18 位小数）。" : undefined}
         />
         <Field
-          label="Teacher payout wallet"
+          label="教师收款钱包"
           id={`submit-wallet-${course.id}`}
           value={payoutWallet}
           onChange={(event) => setPayoutWallet(event.target.value)}
           placeholder="0x…"
-          hint="Receives the 75% teacher settlement."
-          error={payoutWallet && !walletValid ? "Enter a valid 0x Ethereum address." : undefined}
+          hint="接收 75% 的教师分成。"
+          error={payoutWallet && !walletValid ? "请输入有效的 0x 以太坊地址。" : undefined}
         />
         <Field
-          label="Certificate metadata URI"
+          label="证书元数据 URI"
           id={`submit-uri-${course.id}`}
           value={metadataUri}
           onChange={(event) => setMetadataUri(event.target.value)}
           placeholder="ipfs://…"
-          hint="IPFS URI for the SBT metadata. No personal data may be included."
-          error={metadataUri.trim() && !uriValid ? "Enter a valid ipfs:// URI." : undefined}
+          hint="SBT 元数据的 IPFS URI，不得包含个人数据。"
+          error={metadataUri.trim() && !uriValid ? "请输入有效的 ipfs:// URI。" : undefined}
         />
       </section>
       <Button
@@ -772,16 +773,14 @@ function PublicationForm({
         disabled={phase === "submitting" || !readyGate || !formValid}
         onClick={() => void submit()}
       >
-        {phase === "submitting" ? "Submitting…" : "Submit publication request"}
+        {phase === "submitting" ? "正在提交…" : "提交发布申请"}
       </Button>
       {error && (
         <p className="error" role="alert">
           {error}
         </p>
       )}
-      <p className="fine-print">
-        Submission freezes the draft. Only an admin review can approve or return it to draft.
-      </p>
+      <p className="fine-print">提交后草稿将被冻结，只有管理员审核可以批准或将其退回为草稿。</p>
     </Card>
   );
 }

@@ -197,24 +197,23 @@ export function apiErrorMessage(error: unknown): string {
   if (error instanceof ApiRequestError) {
     switch (error.status) {
       case 401:
-        return "Your session is missing or expired. Sign in again before retrying.";
+        return "会话缺失或已过期，请重新登录后重试。";
       case 403:
-        return "Your account is not authorized for this action. Server roles are authoritative.";
+        return "你的账号无权执行该操作，服务端角色判定为准。";
       case 404:
-        return "The requested resource no longer exists.";
+        return "请求的资源已不存在。";
       case 409:
-        return "The request conflicts with the current server state. Reload and review before retrying.";
+        return "请求与当前服务端状态冲突，请刷新页面确认后重试。";
       case 429:
-        return "Too many requests. Wait briefly, then retry.";
+        return "请求过于频繁，请稍后再试。";
       case 503:
-        return "The service is temporarily unavailable. No state was changed by this attempt.";
+        return "服务暂时不可用，本次操作未改变任何状态。";
       default:
-        return `The API rejected the request (HTTP ${error.status}).`;
+        return `API 拒绝了请求（HTTP ${error.status}）。`;
     }
   }
-  if (error instanceof TypeError)
-    return "The API could not be reached. Check the network and retry.";
-  return "The request did not complete. Retry after checking your session.";
+  if (error instanceof TypeError) return "无法连接 API，请检查网络后重试。";
+  return "请求未完成，请检查登录状态后重试。";
 }
 
 type Auth = { getAccessToken: () => Promise<string | null>; wallet?: Address };
@@ -234,20 +233,20 @@ export class UniversityApi {
     init: RequestInit = {},
     authenticated = false,
   ): Promise<T> {
-    if (!this.baseUrl) throw new ApiUnavailableError("VITE_API_BASE_URL is not configured.");
+    if (!this.baseUrl) throw new ApiUnavailableError("VITE_API_BASE_URL 未配置。");
     const headers = new Headers(init.headers);
     headers.set("accept", "application/json");
     if (init.body) headers.set("content-type", "application/json");
     if (authenticated) {
       const token = await this.auth.getAccessToken();
       if (!token || !this.auth.wallet)
-        throw new ApiUnavailableError("Sign in and connect a wallet before calling this API.");
+        throw new ApiUnavailableError("请先登录并连接钱包，再调用该 API。");
       headers.set("authorization", `Bearer ${token}`);
       headers.set("x-wallet-address", this.auth.wallet);
     }
     const response = await fetch(new URL(path, this.baseUrl), { ...init, headers });
     if (!response.ok)
-      throw new ApiRequestError(response.status, `API request failed (${response.status}).`);
+      throw new ApiRequestError(response.status, `API 请求失败（HTTP ${response.status}）。`);
     return response.json() as Promise<T>;
   }
 

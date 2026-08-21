@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "network": "ethereum-sepolia",
+  "chainId": 11155111,
+  "contract": "YDToken",
+  "contractAddress": "0x63c887858f27b1d558f16b13f35a0a1b5fb8cde8",
+  "deploymentTransaction": "0x852935ebea7e829e3a1c4e240fef35bf2cbbf9ab1ebd6cdea2e51171f26553c1",
+  "deploymentBlockNumber": 11534376,
+  "broadcastRecordedAt": "2026-08-21T06:53:10.112Z",
+  "deployer": "0x0b0ab3cccf72c761d1e48430cd7c71986ad63409",
+  "treasury": "0xC1f1127D7F12722eD9Ef824A6c9B8619798Bc8B8",
+  "token": {
+    "name": "YiDeng Token",
+    "symbol": "YD",
+    "decimals": 18,
+    "totalSupplyBaseUnits": "80000000000000000000000000"
+  },
+  "sourceVerification": {
+    "provider": "etherscan",
+    "status": "verified",
+    "checkedAt": "2026-08-21T06:57:06Z",
+    "url": "https://sepolia.etherscan.io/address/0x63c887858f27b1d558f16b13f35a0a1b5fb8cde8#code"
+  }
+}

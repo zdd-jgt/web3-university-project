@@ -8,6 +8,7 @@ import {
   type UniversityApi,
   useUniversityApi,
 } from "../../lib/api";
+import { formatZhDateTime } from "../../lib/localization";
 import { runtime, useWalletSession } from "../../lib/runtime";
 
 export function CommentsSection({ courseId, teacherId }: { courseId: string; teacherId?: string }) {
@@ -36,23 +37,22 @@ export function CommentsSection({ courseId, teacherId }: { courseId: string; tea
   if (!api.available) {
     return (
       <Card className="empty-state">
-        <MessageSquareText size={18} aria-hidden="true" /> Comments are shown for live published
-        courses once the API is configured.
+        <MessageSquareText size={18} aria-hidden="true" /> API 配置完成后，将展示已发布课程的评论。
       </Card>
     );
   }
 
   return (
     <Card>
-      <h2>Purchaser discussion</h2>
+      <h2>购买者讨论</h2>
       {threads.isLoading ? (
-        <p className="muted">Loading comments…</p>
+        <p className="muted">正在加载评论…</p>
       ) : threads.isError ? (
         <p className="error" role="alert">
           {apiErrorMessage(threads.error)}
         </p>
       ) : !threads.data?.length ? (
-        <p className="muted">No comments yet. Only verified purchasers can start a thread.</p>
+        <p className="muted">暂无评论。只有经过验证的购买者才能发起讨论。</p>
       ) : (
         threads.data.map((thread) => (
           <CommentThread
@@ -113,29 +113,29 @@ function CommentThread({
     <div className="comment-thread">
       <div className="comment-meta">
         <strong>{authorLabel(thread.authorId, currentUserId)}</strong>
-        {thread.authorId === teacherId && <Status tone="success">Teacher</Status>}
-        <span className="muted">{new Date(thread.createdAt).toLocaleString()}</span>
+        {thread.authorId === teacherId && <Status tone="success">教师</Status>}
+        <span className="muted">{formatZhDateTime(thread.createdAt)}</span>
       </div>
       <p className="comment-body">{thread.body}</p>
       {thread.replies.map((reply) => (
         <div className="comment-reply" key={reply.id}>
           <div className="comment-meta">
             <strong>{authorLabel(reply.authorId, currentUserId)}</strong>
-            {reply.authorId === teacherId && <Status tone="success">Teacher</Status>}
-            <span className="muted">{new Date(reply.createdAt).toLocaleString()}</span>
+            {reply.authorId === teacherId && <Status tone="success">教师</Status>}
+            <span className="muted">{formatZhDateTime(reply.createdAt)}</span>
           </div>
           <p className="comment-body">{reply.body}</p>
         </div>
       ))}
       {canReply && !replying && (
         <Button className="secondary" type="button" onClick={() => setReplying(true)}>
-          Reply as teacher
+          以教师身份回复
         </Button>
       )}
       {replying && (
         <div className="comment-reply-form">
           <label className="field" htmlFor={`reply-${thread.id}`}>
-            <span>Teacher reply</span>
+            <span>教师回复</span>
             <textarea
               id={`reply-${thread.id}`}
               rows={3}
@@ -149,10 +149,10 @@ function CommentThread({
               disabled={phase === "sending" || !replyBody.trim()}
               onClick={() => void sendReply()}
             >
-              {phase === "sending" ? "Sending…" : "Send reply"}
+              {phase === "sending" ? "发送中…" : "发送回复"}
             </Button>
             <Button className="secondary" type="button" onClick={() => setReplying(false)}>
-              Cancel
+              取消
             </Button>
           </div>
           {error && (
@@ -202,8 +202,8 @@ function NewCommentForm({
     return (
       <p className="fine-print">
         {runtime.isDemo
-          ? "Demo mode: posting is disabled. Live comments require a Privy session, and the server verifies the purchase before accepting one."
-          : "Sign in and connect a wallet to comment. The server verifies the purchase before accepting a comment."}
+          ? "演示模式：评论功能已禁用。真实评论需要 Privy 会话，服务端会在接受评论前核验购买资格。"
+          : "请先登录并连接钱包再评论。服务端会在接受评论前核验购买资格。"}
       </p>
     );
   }
@@ -211,7 +211,7 @@ function NewCommentForm({
   return (
     <div className="comment-new">
       <label className="field" htmlFor={`new-comment-${courseId}`}>
-        <span>Add a comment</span>
+        <span>添加评论</span>
         <textarea
           id={`new-comment-${courseId}`}
           rows={3}
@@ -220,7 +220,7 @@ function NewCommentForm({
             setBody(event.target.value);
             setPosted(false);
           }}
-          placeholder="Visible to other purchasers. The server checks your purchase entitlement."
+          placeholder="对其他购买者可见。服务端将核验你的购买资格。"
         />
       </label>
       <Button
@@ -228,11 +228,11 @@ function NewCommentForm({
         disabled={phase === "sending" || !body.trim()}
         onClick={() => void submit()}
       >
-        {phase === "sending" ? "Posting…" : "Post comment"}
+        {phase === "sending" ? "发布中…" : "发布评论"}
       </Button>
       {posted && (
         <p className="success-text" role="status">
-          Comment posted.
+          评论已发布。
         </p>
       )}
       {error && (
@@ -245,6 +245,6 @@ function NewCommentForm({
 }
 
 function authorLabel(authorId: string, currentUserId?: string): string {
-  if (currentUserId && authorId === currentUserId) return "You";
+  if (currentUserId && authorId === currentUserId) return "你";
   return `${authorId.slice(0, 6)}…`;
 }

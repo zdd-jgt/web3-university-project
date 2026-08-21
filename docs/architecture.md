@@ -10,7 +10,7 @@ non-transferable certificate at the wallet that purchased the course.
 
 - Course purchase truth comes from `CourseMarket`, never from a browser request.
 - Course price and sale status are read from `CourseCatalog` before purchase.
-- YD has a fixed supply of 1,000,000 tokens and cannot be minted after deploy.
+- YD has a fixed supply of 80,000,000 tokens and cannot be minted after deploy.
 - Purchase settlement is atomic: 75% teacher, 25% treasury.
 - A buyer can purchase a course once and receive one certificate for it.
 - A certificate cannot be transferred.

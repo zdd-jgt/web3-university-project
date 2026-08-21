@@ -9,6 +9,7 @@ import type { Address } from "viem";
 import { createConfig as createWagmiConfig, http, useAccount, WagmiProvider } from "wagmi";
 import { sepolia } from "wagmi/chains";
 import { contractAddresses } from "./chain";
+import { PLATFORM_NAME } from "./localization";
 
 const appId = import.meta.env.VITE_PRIVY_APP_ID;
 const rpcUrl = import.meta.env.VITE_SEPOLIA_RPC_URL;
@@ -22,11 +23,7 @@ export const runtime = {
   hasMarketplace: configuredMarketplace,
   isDemo: !appId || !rpcUrl,
   chain: "Sepolia",
-  reason: !appId
-    ? "VITE_PRIVY_APP_ID is not configured"
-    : !rpcUrl
-      ? "VITE_SEPOLIA_RPC_URL is not configured"
-      : "",
+  reason: !appId ? "VITE_PRIVY_APP_ID 未配置" : !rpcUrl ? "VITE_SEPOLIA_RPC_URL 未配置" : "",
 };
 
 const wagmiOptions = {
@@ -67,15 +64,15 @@ function sessionFromAccount({
   getAccessToken,
 }: Omit<WalletSession, "mode" | "canTransact" | "blockedReason">): WalletSession {
   const blockedReason = runtime.isDemo
-    ? `Demo mode: ${runtime.reason}.`
+    ? `演示模式：${runtime.reason}。`
     : !ready
-      ? "Wallet session is still loading."
+      ? "钱包会话仍在加载中。"
       : !authenticated
-        ? "Sign in with Privy before connecting a wallet."
+        ? "请先通过 Privy 登录，再连接钱包。"
         : !address
-          ? "Connect an embedded or desktop external wallet."
+          ? "请连接内嵌钱包或桌面外部钱包。"
           : chainId !== sepolia.id
-            ? "Switch the active wallet to Sepolia."
+            ? "请将当前钱包切换到 Sepolia。"
             : "";
   return {
     mode: runtime.isDemo ? "demo" : "live",
@@ -129,6 +126,40 @@ function ProviderBoundary({ children }: { children: ReactNode }) {
           defaultChain: sepolia,
           supportedChains: [sepolia],
           embeddedWallets: { ethereum: { createOnLogin: "users-without-wallets" } },
+          appearance: {
+            landingHeader: "登录或注册",
+            loginMessage: `使用邮箱、社交账号或钱包登录${PLATFORM_NAME}。`,
+          },
+          intl: {
+            defaultCountry: "CN",
+            textLocalization: {
+              "connectionStatus.successfullyConnected": "已成功连接 {walletName}",
+              "connectionStatus.errorTitle": "连接失败",
+              "connectionStatus.connecting": "正在连接钱包",
+              "connectionStatus.connectOneWallet": "请连接一个钱包以继续",
+              "connectionStatus.checkOtherWindows": "请检查其他钱包窗口",
+              "connectionStatus.stillHere": "仍在等待钱包响应",
+              "connectionStatus.tryConnectingAgain": "重新连接",
+              "connectionStatus.or": "或",
+              "connectionStatus.useDifferentLink": "使用其他连接方式",
+              "connectWallet.connectYourWallet": "连接钱包",
+              "connectWallet.waitingForWallet": "正在等待钱包确认",
+              "connectWallet.connectToAccount": "连接到你的账户",
+              "connectWallet.installAndConnect": "安装并连接钱包",
+              "connectWallet.tryConnectingAgain": "重新连接",
+              "connectWallet.openInApp": "在钱包应用中打开",
+              "connectWallet.copyLink": "复制连接",
+              "connectWallet.retry": "重试",
+              "connectWallet.searchPlaceholder": "搜索钱包",
+              "connectWallet.noWalletsFound": "未找到钱包",
+              "connectWallet.lastUsed": "上次使用",
+              "connectWallet.selectYourWallet": "选择钱包",
+              "connectWallet.selectNetwork": "选择网络",
+              "connectWallet.goToWallet": "前往钱包",
+              "connectWallet.scanToConnect": "扫码连接",
+              "connectWallet.openOrInstall": "打开或安装钱包",
+            },
+          },
         }}
       >
         <QueryClientProvider client={queryClient}>
@@ -154,6 +185,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
 export function useWalletSession() {
   const session = useContext(WalletSessionContext);
-  if (!session) throw new Error("Wallet session is unavailable outside AppProviders.");
+  if (!session) throw new Error("钱包会话只能在 AppProviders 内使用。");
   return session;
 }

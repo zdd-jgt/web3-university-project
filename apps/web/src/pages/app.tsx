@@ -48,7 +48,7 @@ function CourseCard({ course }: { course: Course }) {
       <div className="course-card-body">
         <div className="row spread">
           <Status>{course.level}</Status>
-          <span className="muted">{course.lessons} lessons</span>
+          <span className="muted">{course.lessons} 节课</span>
         </div>
         <h2>
           <Link to={`/courses/${course.id}`}>{course.title}</Link>
@@ -67,11 +67,11 @@ function CourseCard({ course }: { course: Course }) {
 function NotFound() {
   return (
     <div className="page narrow">
-      <PageIntro eyebrow="NOT FOUND" title="This course does not exist.">
-        The URL was not mapped to a known course. No fallback course has been selected.
+      <PageIntro eyebrow="未找到" title="该课程不存在。">
+        该链接未对应任何已知课程，也未选择兜底课程。
       </PageIntro>
       <Link className="button" to="/courses">
-        Return to the course catalog
+        返回课程目录
       </Link>
     </div>
   );
@@ -89,32 +89,31 @@ function Home() {
     <>
       <section className="hero">
         <div className="hero-copy">
-          <p className="eyebrow">ON-CHAIN LEARNING, HUMAN-CENTERED</p>
+          <p className="eyebrow">链上学习，以人为本</p>
           <h1>
-            Learn the systems
+            学习那些
             <br />
-            <em>you can verify.</em>
+            <em>你可以亲自验证的系统。</em>
           </h1>
           <p className="lede">
-            Structured Web3 education, Sepolia test assets, and non-transferable
-            certificates—without hiding risk behind a wallet button.
+            结构化的 Web3 教学、Sepolia 测试资产与不可转让的证书——不把风险藏在钱包按钮背后。
           </p>
           <div className="button-row">
             <Link className="button" to="/courses">
-              Explore courses
+              浏览课程
             </Link>
             <Link className="button secondary" to="/how-it-works">
-              How it works
+              工作原理
             </Link>
           </div>
           <p className="supporting">
-            <ShieldCheck size={16} /> Testnet assets only. They have no monetary value.
+            <ShieldCheck size={16} /> 仅使用测试网资产，没有任何真实价值。
           </p>
         </div>
         <div className="hero-orbit" aria-hidden="true">
           <div className="orbital-card">
             <span className="orbital-dot" />
-            Evidence, not hype <BadgeCheck size={20} />
+            证据，而非炒作 <BadgeCheck size={20} />
           </div>
           <div className="token token-yd">YD</div>
           <div className="token token-eth">Ξ</div>
@@ -126,42 +125,35 @@ function Home() {
           <span className="feature-icon">
             <ArrowDownUp />
           </span>
-          <h2>1. Get test YD</h2>
-          <p>
-            Swap SepoliaETH or Test USDT. Quotes, slippage and deadlines are visible before intent.
-          </p>
+          <h2>1. 获取测试 YD</h2>
+          <p>用 SepoliaETH 或 Test USDT 兑换，报价、滑点与截止时间都在确认前可见。</p>
         </Card>
         <Card>
           <span className="feature-icon">
             <LockKeyhole />
           </span>
-          <h2>2. Purchase once</h2>
-          <p>Approve only the exact YD price, then submit a separate purchase transaction.</p>
+          <h2>2. 一次购买</h2>
+          <p>仅授权与价格完全一致的 YD，再单独提交购买交易。</p>
         </Card>
         <Card>
           <span className="feature-icon">
             <GraduationCap />
           </span>
-          <h2>3. Earn proof</h2>
-          <p>
-            Complete required lessons and receive a non-transferable certificate at the purchasing
-            wallet.
-          </p>
+          <h2>3. 获得证明</h2>
+          <p>完成必修课时后，购买钱包将收到不可转让的证书。</p>
         </Card>
       </section>
       <section className="section-heading">
         <div>
-          <p className="eyebrow">START HERE</p>
-          <h2>Small courses, explicit boundaries</h2>
+          <p className="eyebrow">从这里开始</p>
+          <h2>小班课程，明确边界</h2>
         </div>
-        <Link to="/courses">Browse all courses →</Link>
+        <Link to="/courses">浏览全部课程 →</Link>
       </section>
       {api.available && featured.isLoading ? (
-        <Card className="empty-state">Loading published courses…</Card>
+        <Card className="empty-state">正在加载已发布课程…</Card>
       ) : api.available && featured.isError ? (
-        <Card className="empty-state">
-          The live course catalog is unavailable. Demo links are not substituted.
-        </Card>
+        <Card className="empty-state">线上课程目录暂不可用，且不会用演示内容替代。</Card>
       ) : (
         <section className="course-grid">
           {featuredCourses.slice(0, 3).map((course) => (
@@ -176,41 +168,29 @@ function Home() {
 function HowItWorks() {
   return (
     <div className="page">
-      <PageIntro eyebrow="HOW IT WORKS" title="A course purchase is not an account permission.">
-        The browser guides an explicit wallet intention. The course contracts remain the source of
-        truth for sale status, price and ownership.
+      <PageIntro eyebrow="工作原理" title="购买课程不等于授予账户权限。">
+        浏览器只引导明确的钱包意图，课程合约始终是售卖状态、价格与所有权的唯一事实来源。
       </PageIntro>
       <section className="timeline">
         <div>
           <b>01</b>
-          <h2>Connect an embedded or browser wallet</h2>
-          <p>
-            Desktop browser wallets only for this MVP. No mobile-wallet integration is provided.
-          </p>
+          <h2>连接内嵌钱包或浏览器钱包</h2>
+          <p>本 MVP 仅支持桌面浏览器钱包，不提供移动端钱包集成。</p>
         </div>
         <div>
           <b>02</b>
-          <h2>Use Sepolia test assets</h2>
-          <p>
-            Test assets are for learning and have no value. Never send real assets to a test
-            address.
-          </p>
+          <h2>使用 Sepolia 测试资产</h2>
+          <p>测试资产仅用于学习，没有任何价值。切勿向测试地址发送真实资产。</p>
         </div>
         <div>
           <b>03</b>
-          <h2>Approve the exact course price</h2>
-          <p>
-            You review an allowance for the displayed price only. The UI cannot authorize a contract
-            action.
-          </p>
+          <h2>授权与价格完全一致的金额</h2>
+          <p>你只审批展示的标价额度，界面无法代替合约授权。</p>
         </div>
         <div>
           <b>04</b>
-          <h2>Complete verified lessons</h2>
-          <p>
-            Progress and certificate entitlement are evaluated by the API and contracts when
-            integration is configured.
-          </p>
+          <h2>完成可验证的课时</h2>
+          <p>集成配置完成后，进度与证书资格将由 API 和合约核验。</p>
         </div>
       </section>
     </div>
@@ -224,39 +204,39 @@ export function Courses() {
     queryFn: () => api.listCourses(),
     enabled: api.available,
   });
-  const [level, setLevel] = useState("All");
-  const visible = level === "All" ? courses : courses.filter((course) => course.level === level);
+  const [level, setLevel] = useState("全部");
+  const visible = level === "全部" ? courses : courses.filter((course) => course.level === level);
   const displayedCourses = api.available ? (catalog.data?.map(courseFromApi) ?? []) : visible;
   return (
     <div className="page">
-      <PageIntro eyebrow="COURSE CATALOG" title="Learn by doing, not by guessing.">
-        Every course pairs conceptual lessons with an explicit on-chain outcome.
+      <PageIntro eyebrow="课程目录" title="动手学习，而不是凭空猜测。">
+        每门课程都把概念课时与明确的链上结果结合起来。
       </PageIntro>
       <div className="filter-row">
-        <label htmlFor="level-filter">Filter by level</label>
+        <label htmlFor="level-filter">按级别筛选</label>
         <select id="level-filter" value={level} onChange={(event) => setLevel(event.target.value)}>
-          <option>All</option>
-          <option>Foundation</option>
-          <option>Intermediate</option>
-          <option>Advanced</option>
+          <option>全部</option>
+          <option>入门</option>
+          <option>进阶</option>
+          <option>高级</option>
         </select>
         <span aria-live="polite" className="muted">
           {api.available
             ? catalog.isLoading
-              ? "Loading API catalog…"
+              ? "正在加载 API 目录…"
               : catalog.isError
-                ? "API catalog unavailable"
-                : `${catalog.data?.length ?? 0} API courses`
-            : `${visible.length} demo courses`}
+                ? "API 目录不可用"
+                : `${catalog.data?.length ?? 0} 门 API 课程`
+            : `${visible.length} 门演示课程`}
         </span>
       </div>
       {api.available && catalog.isError && (
         <p className="error" role="alert">
-          The configured API catalog could not be loaded. Demo cards are not presented as live data.
+          无法加载已配置的 API 目录，演示卡片不会冒充真实数据。
         </p>
       )}
       {api.available && catalog.isLoading ? (
-        <Card className="empty-state">Loading the published course index…</Card>
+        <Card className="empty-state">正在加载已发布课程索引…</Card>
       ) : displayedCourses.length ? (
         <section className="course-grid">
           {displayedCourses.map((course) => (
@@ -266,7 +246,7 @@ export function Courses() {
       ) : (
         <Card className="empty-state">
           <BookOpenIcon />
-          No courses match this level. Choose another filter to recover.
+          没有符合该级别的课程，请换一个筛选条件。
         </Card>
       )}
     </div>
@@ -286,13 +266,13 @@ function CourseDetail() {
     enabled: api.available,
   });
   if (api.available && detail.isLoading) {
-    return <Card className="empty-state">Loading the published course…</Card>;
+    return <Card className="empty-state">正在加载已发布课程…</Card>;
   }
   if (api.available && detail.isError) {
     return (
       <div className="page narrow">
-        <PageIntro eyebrow="COURSE UNAVAILABLE" title="The API course could not be loaded.">
-          Retry after checking the API. Demo content is not substituted for a failed live course.
+        <PageIntro eyebrow="课程不可用" title="无法加载该 API 课程。">
+          请检查 API 后重试。真实课程加载失败时不会用演示内容替代。
         </PageIntro>
       </div>
     );
@@ -303,7 +283,7 @@ function CourseDetail() {
     ? (detail.data?.lessons ?? [])
     : Array.from({ length: course.lessons }, (_, index) => ({
         id: `demo-${index + 1}`,
-        title: index === 0 ? "Orientation and safety boundary" : `Required lesson ${index + 1}`,
+        title: index === 0 ? "入门与安全边界" : `必修课时 ${index + 1}`,
         position: index + 1,
         required: true,
         asset: {
@@ -316,7 +296,7 @@ function CourseDetail() {
   return (
     <div className="page">
       <Link className="back-link" to="/courses">
-        ← Course catalog
+        ← 课程目录
       </Link>
       <section className="course-detail-head">
         <div>
@@ -325,55 +305,55 @@ function CourseDetail() {
           <p className="lede">{course.summary}</p>
           <div className="detail-facts">
             <span>{course.teacher}</span>
-            <span>{course.lessons} lessons</span>
+            <span>{course.lessons} 节课</span>
             <span>{course.hours}</span>
           </div>
         </div>
         <Card className="purchase-summary">
-          <span className="muted">One-time testnet price</span>
+          <span className="muted">测试网一次性价格</span>
           <strong>{course.price} YD</strong>
-          <p>Sale status and price are re-read from the contract at checkout.</p>
+          <p>结算时会重新从合约读取售卖状态与价格。</p>
           <Link className="button" to={`/courses/${course.id}/checkout`}>
-            Purchase course
+            购买课程
           </Link>
         </Card>
       </section>
       <section className="detail-grid">
         <Card>
-          <h2>{api.available ? "Course overview" : "What you will learn"}</h2>
+          <h2>{api.available ? "课程概览" : "你将学到什么"}</h2>
           {api.available ? (
             <p>{course.summary}</p>
           ) : (
             <ul className="check-list">
               <li>
-                <Check /> Read contract state without trusting UI claims
+                <Check /> 不信任界面声明，直接读取合约状态
               </li>
               <li>
-                <Check /> Separate wallet intent from on-chain authority
+                <Check /> 区分钱包意图与链上授权
               </li>
               <li>
-                <Check /> Recognize testnet and production boundaries
+                <Check /> 认清测试网与生产环境的边界
               </li>
             </ul>
           )}
         </Card>
         <Card>
-          <h2>Lesson outline</h2>
+          <h2>课时大纲</h2>
           {lessonOutline.map((lesson) => (
             <div className="lesson-row" key={lesson.id}>
               <span>{String(lesson.position).padStart(2, "0")}</span>
               <div>
                 <strong>{lesson.title}</strong>
                 <small>
-                  {lesson.required ? "Required" : "Optional"} ·{" "}
+                  {lesson.required ? "必修" : "选修"} ·{" "}
                   {lesson.asset?.kind === "VIDEO" && lesson.asset.durationMs
-                    ? `${Math.ceil(lesson.asset.durationMs / 60_000)} min video`
+                    ? `${Math.ceil(lesson.asset.durationMs / 60_000)} 分钟视频`
                     : lesson.asset?.kind === "DOCUMENT"
-                      ? "Document"
-                      : "Pending"}
+                      ? "文档"
+                      : "待处理"}
                 </small>
               </div>
-              <LockKeyhole size={16} aria-label="Available after purchase" />
+              <LockKeyhole size={16} aria-label="购买后可学" />
             </div>
           ))}
         </Card>
@@ -381,9 +361,9 @@ function CourseDetail() {
       <aside className="notice">
         <PlayCircle size={19} />
         <div>
-          <strong>No video preview is available.</strong>
+          <strong>暂无视频预览。</strong>
           <br />
-          Video access is intentionally limited to purchased-course entitlement checks.
+          视频访问仅在购买后通过权益校验开放。
         </div>
       </aside>
       <CommentsSection courseId={course.id} teacherId={detail.data?.teacherId} />
@@ -400,7 +380,7 @@ function Checkout() {
     enabled: api.available,
   });
   if (api.available && detail.isLoading) {
-    return <Card className="empty-state">Loading the contract-bound course…</Card>;
+    return <Card className="empty-state">正在加载合约绑定的课程…</Card>;
   }
   if (api.available && detail.isError) return <NotFound />;
   const course = api.available && detail.data ? courseFromApi(detail.data) : courseById(id);
@@ -437,7 +417,7 @@ function CheckoutCourse({ course }: { course: NonNullable<ReturnType<typeof cour
   const busy = state.phase === "approving" || state.phase === "purchasing";
 
   async function readFreshPrice(): Promise<bigint> {
-    if (!publicClient || !liveCapable) throw new Error("Live Sepolia checkout is unavailable.");
+    if (!publicClient || !liveCapable) throw new Error("无法进行 Sepolia 真实结算。");
     const [price] = await publicClient.readContract({
       address: catalogAddress,
       abi: courseCatalogAbi,
@@ -449,7 +429,7 @@ function CheckoutCourse({ course }: { course: NonNullable<ReturnType<typeof cour
 
   async function approveExact() {
     try {
-      if (!wallet.address || !publicClient) throw new Error("Connect a Sepolia wallet first.");
+      if (!wallet.address || !publicClient) throw new Error("请先连接 Sepolia 钱包。");
       const price = await readFreshPrice();
       const approvalKey = price.toString();
       dispatch({ type: "START_APPROVAL", amount: approvalKey });
@@ -462,14 +442,14 @@ function CheckoutCourse({ course }: { course: NonNullable<ReturnType<typeof cour
       });
       setApprovalHash(hash);
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
-      if (receipt.status !== "success") throw new Error("The approval transaction reverted.");
+      if (receipt.status !== "success") throw new Error("授权交易已回滚。");
       const allowance = await publicClient.readContract({
         address: tokenAddress,
         abi: erc20ApprovalAbi,
         functionName: "allowance",
         args: [wallet.address, marketAddress],
       });
-      if (allowance < price) throw new Error("The confirmed allowance is below the course price.");
+      if (allowance < price) throw new Error("已确认的授权额度低于课程价格。");
       dispatch({ type: "APPROVAL_CONFIRMED", amount: approvalKey });
     } catch (error) {
       dispatch({ type: "FAILED", message: walletErrorMessage(error) });
@@ -479,12 +459,12 @@ function CheckoutCourse({ course }: { course: NonNullable<ReturnType<typeof cour
   async function buyCourse() {
     try {
       if (!wallet.address || !publicClient || !state.approvedAmount) {
-        throw new Error("An exact confirmed approval is required first.");
+        throw new Error("请先完成与价格一致的授权确认。");
       }
       const approvedPrice = BigInt(state.approvedAmount);
       const freshPrice = await readFreshPrice();
       if (freshPrice !== approvedPrice) {
-        throw new Error("The on-chain price changed. Review and approve the new exact price.");
+        throw new Error("链上价格已变化，请核对并重新授权新价格。");
       }
       dispatch({ type: "START_PURCHASE", price: state.approvedAmount });
       const deadline = BigInt(Math.floor(Date.now() / 1000) + 5 * 60);
@@ -497,14 +477,14 @@ function CheckoutCourse({ course }: { course: NonNullable<ReturnType<typeof cour
       });
       setPurchaseHash(hash);
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
-      if (receipt.status !== "success") throw new Error("The purchase transaction reverted.");
+      if (receipt.status !== "success") throw new Error("购买交易已回滚。");
       const purchased = await publicClient.readContract({
         address: marketAddress,
         abi: courseMarketAbi,
         functionName: "hasPurchased",
         args: [wallet.address, course.contractCourseId],
       });
-      if (!purchased) throw new Error("The receipt was mined but purchase state was not found.");
+      if (!purchased) throw new Error("回执已上链，但未找到购买状态。");
       await offer.refetch();
       dispatch({ type: "PURCHASE_CONFIRMED" });
     } catch (error) {
@@ -517,28 +497,27 @@ function CheckoutCourse({ course }: { course: NonNullable<ReturnType<typeof cour
       <Link className="back-link" to={`/courses/${course.id}`}>
         ← {course.title}
       </Link>
-      <PageIntro eyebrow="SECURE CHECKOUT" title="Approve exactly, then purchase.">
-        This UI does not grant permission. Before a live call, the integration must re-read contract
-        price and sale state.
+      <PageIntro eyebrow="安全结算" title="先精确授权，再购买。">
+        本界面不授予任何权限。真实调用前，集成必须重新读取合约价格与售卖状态。
       </PageIntro>
       <Card className="checkout-card">
         <div className="row spread">
-          <span>Course</span>
+          <span>课程</span>
           <strong>{course.title}</strong>
         </div>
         <div className="row spread">
-          <span>Network</span>
-          <Status tone="warning">Sepolia testnet</Status>
+          <span>网络</span>
+          <Status tone="warning">Sepolia 测试网</Status>
         </div>
         <div className="row spread total">
-          <span>Exact approval and purchase price</span>
+          <span>精确授权与购买价格</span>
           <strong>
-            {liveCapable && offer.isLoading ? "Reading chain…" : `${displayedPrice} YD`}
+            {liveCapable && offer.isLoading ? "正在读取链上数据…" : `${displayedPrice} YD`}
           </strong>
         </div>
         <ol className="stepper">
           <li className={state.phase === "idle" || state.phase === "failed" ? "active" : "done"}>
-            <span>1</span>Approve <b>{displayedPrice} YD only</b>
+            <span>1</span>仅授权 <b>{displayedPrice} YD</b>
           </li>
           <li
             className={
@@ -549,10 +528,10 @@ function CheckoutCourse({ course }: { course: NonNullable<ReturnType<typeof cour
                 : ""
             }
           >
-            <span>2</span>Buy course
+            <span>2</span>购买课程
           </li>
           <li className={state.phase === "complete" ? "active" : ""}>
-            <span>3</span>Confirm enrollment
+            <span>3</span>确认入学
           </li>
         </ol>
         {state.error && (
@@ -560,7 +539,7 @@ function CheckoutCourse({ course }: { course: NonNullable<ReturnType<typeof cour
             <TriangleAlert />
             {state.error}
             <Button type="button" onClick={() => dispatch({ type: "RETRY" })}>
-              Retry safely
+              安全重试
             </Button>
           </div>
         )}
@@ -568,15 +547,13 @@ function CheckoutCourse({ course }: { course: NonNullable<ReturnType<typeof cour
           <div className="success-panel" role="status">
             <BadgeCheck size={28} />
             <div>
-              <strong>
-                {runtime.isDemo ? "Demo enrollment confirmed" : "On-chain purchase confirmed"}
-              </strong>
+              <strong>{runtime.isDemo ? "演示入学已确认" : "链上购买已确认"}</strong>
               <p>
                 {runtime.isDemo
-                  ? "No transaction occurred."
-                  : "The receipt and contract state agree. Course access appears after the indexer finalizes the event."}
+                  ? "未发生任何交易。"
+                  : "回执与合约状态一致。索引器处理完事件后即可访问课程。"}
               </p>
-              <Link to={`/learn/${course.id}`}>Start learning →</Link>
+              <Link to={`/learn/${course.id}`}>开始学习 →</Link>
             </div>
           </div>
         ) : (
@@ -593,9 +570,7 @@ function CheckoutCourse({ course }: { course: NonNullable<ReturnType<typeof cour
                   : void approveExact()
               }
             >
-              {state.phase === "approving"
-                ? "Confirming exact approval…"
-                : `Approve ${displayedPrice} YD`}
+              {state.phase === "approving" ? "正在确认精确授权…" : `授权 ${displayedPrice} YD`}
             </Button>
             <Button
               className="secondary"
@@ -606,7 +581,7 @@ function CheckoutCourse({ course }: { course: NonNullable<ReturnType<typeof cour
                   : void buyCourse()
               }
             >
-              {state.phase === "purchasing" ? "Confirming purchase…" : "Buy course"}
+              {state.phase === "purchasing" ? "正在确认购买…" : "购买课程"}
             </Button>
           </div>
         )}
@@ -616,7 +591,7 @@ function CheckoutCourse({ course }: { course: NonNullable<ReturnType<typeof cour
             type="button"
             onClick={() => dispatch({ type: "APPROVAL_CONFIRMED", amount: course.price })}
           >
-            Mark simulated exact approval confirmed
+            标记模拟精确授权已完成
           </Button>
         )}
         {runtime.isDemo && state.phase === "purchasing" && (
@@ -625,14 +600,14 @@ function CheckoutCourse({ course }: { course: NonNullable<ReturnType<typeof cour
             type="button"
             onClick={() => dispatch({ type: "PURCHASE_CONFIRMED" })}
           >
-            Mark simulated purchase receipt confirmed
+            标记模拟购买回执已确认
           </Button>
         )}
         {!runtime.isDemo && (!liveCapable || offer.isError) && (
           <p className="error" role="alert">
             {!runtime.hasMarketplace
-              ? "CourseCatalog, CourseMarket and YDToken addresses must all be configured."
-              : wallet.blockedReason || "The contract offer could not be read from Sepolia."}
+              ? "必须先配置 CourseCatalog、CourseMarket 和 YDToken 地址。"
+              : wallet.blockedReason || "无法从 Sepolia 读取合约报价。"}
           </p>
         )}
         {!runtime.isDemo && (approvalHash || purchaseHash) && (
@@ -643,7 +618,7 @@ function CheckoutCourse({ course }: { course: NonNullable<ReturnType<typeof cour
                 target="_blank"
                 rel="noreferrer"
               >
-                Approval receipt <ExternalLink size={13} />
+                授权回执 <ExternalLink size={13} />
               </a>
             )}
             {purchaseHash && (
@@ -652,15 +627,15 @@ function CheckoutCourse({ course }: { course: NonNullable<ReturnType<typeof cour
                 target="_blank"
                 rel="noreferrer"
               >
-                Purchase receipt <ExternalLink size={13} />
+                购买回执 <ExternalLink size={13} />
               </a>
             )}
           </div>
         )}
         <p className="fine-print">
           {runtime.isDemo
-            ? "Demo action only—no transaction, signature or value transfer occurs."
-            : "A wallet request will require explicit user confirmation."}
+            ? "仅为演示操作——不会产生交易、签名或价值转移。"
+            : "钱包请求需要你明确确认。"}
         </p>
       </Card>
     </div>
@@ -669,15 +644,12 @@ function CheckoutCourse({ course }: { course: NonNullable<ReturnType<typeof cour
 
 function walletErrorMessage(error: unknown): string {
   if (error instanceof Error) {
+    if (/[一-鿿]/.test(error.message)) return error.message;
     if (error.name === "UserRejectedRequestError" || /user rejected|denied/i.test(error.message)) {
-      return "The wallet request was cancelled. No later transaction was sent.";
-    }
-    if (/price changed/i.test(error.message)) return error.message;
-    if (/reverted|allowance|purchase state|unavailable|connect/i.test(error.message)) {
-      return error.message;
+      return "钱包请求已取消，未发送任何后续交易。";
     }
   }
-  return "The wallet operation did not complete. Verify Sepolia, balance and contract status, then retry.";
+  return "钱包操作未完成。请检查 Sepolia 网络、余额与合约状态后重试。";
 }
 
 function Learn() {
@@ -689,7 +661,7 @@ function Learn() {
     enabled: api.available,
   });
   if (api.available && detail.isLoading) {
-    return <Card className="empty-state">Loading protected course metadata…</Card>;
+    return <Card className="empty-state">正在加载受保护的课程数据…</Card>;
   }
   if (api.available && detail.isError) return <NotFound />;
   const course = api.available && detail.data ? courseFromApi(detail.data) : courseById(id);
@@ -729,7 +701,7 @@ function LearningCourse({ course, apiCourse }: { course: Course; apiCourse?: Api
     ? apiCourse.lessons
     : Array.from({ length: course.lessons }, (_, index) => ({
         id: `demo-${index + 1}`,
-        title: index === 3 ? "Storage and state" : `Lesson ${index + 1}`,
+        title: index === 3 ? "存储与状态" : `第 ${index + 1} 课`,
         position: index + 1,
         required: true,
         asset: null,
@@ -740,11 +712,11 @@ function LearningCourse({ course, apiCourse }: { course: Course; apiCourse?: Api
         <Link className="brand mini" to="/">
           W³
         </Link>
-        <p className="eyebrow">YOUR COURSE</p>
+        <p className="eyebrow">你的课程</p>
         <h1>{course.title}</h1>
         <div className="progress-label">
           <span>
-            {completedCount}/{requiredCount} complete
+            已完成 {completedCount}/{requiredCount}
           </span>
           <strong>{percentage}%</strong>
         </div>
@@ -774,7 +746,7 @@ function LearningCourse({ course, apiCourse }: { course: Course; apiCourse?: Api
       </aside>
       <main className="lesson-main">
         <header className="learn-head">
-          <Link to={`/courses/${course.id}`}>← Course overview</Link>
+          <Link to={`/courses/${course.id}`}>← 课程概览</Link>
           <ProfileChip />
         </header>
         {api.available && activeLesson ? (
@@ -801,30 +773,21 @@ function LearningCourse({ course, apiCourse }: { course: Course; apiCourse?: Api
           ) : (
             <div className="video-shell">
               <PlayCircle size={42} />
-              <span>No ready learning content</span>
-              <small>
-                This lesson has no READY video or document asset, so no learning session can start.
-              </small>
+              <span>暂无就绪的学习内容</span>
+              <small>该课时没有就绪的视频或文档素材，无法开始学习会话。</small>
             </div>
           )
         ) : (
-          <div
-            className="video-shell"
-            role="img"
-            aria-label="Protected lesson player shell without a video preview"
-          >
+          <div className="video-shell" role="img" aria-label="无视频预览的受保护课时播放器">
             <PlayCircle size={42} />
-            <span>Protected lesson player</span>
-            <small>Demo shell only; no video is loaded.</small>
+            <span>受保护的课时播放器</span>
+            <small>仅为演示外壳，未加载任何视频。</small>
           </div>
         )}
         <article className="lesson-content">
-          <p className="eyebrow">LESSON {String(activeLessonIndex + 1).padStart(2, "0")}</p>
-          <h2>{activeLesson?.title ?? "Storage and state"}</h2>
-          <p>
-            Completion is recorded server-side only: verified video coverage or an explicit document
-            confirmation after successful access.
-          </p>
+          <p className="eyebrow">第 {String(activeLessonIndex + 1).padStart(2, "0")} 课</p>
+          <h2>{activeLesson?.title ?? "存储与状态"}</h2>
+          <p>完成情况仅由服务端记录：视频观看覆盖核验，或成功访问后的文档显式确认。</p>
           <div className="button-row">
             <Button
               className="secondary"
@@ -832,7 +795,7 @@ function LearningCourse({ course, apiCourse }: { course: Course; apiCourse?: Api
               disabled={activeLessonIndex === 0}
               onClick={() => setActiveLessonIndex((value) => Math.max(0, value - 1))}
             >
-              Previous lesson
+              上一课
             </Button>
             <Button
               disabled={api.available || completed >= course.lessons}
@@ -840,17 +803,17 @@ function LearningCourse({ course, apiCourse }: { course: Course; apiCourse?: Api
               onClick={() => setCompleted((value) => Math.min(course.lessons, value + 1))}
             >
               {api.available
-                ? "Live progress syncs from verified sessions"
+                ? "实时进度来自已验证的学习会话"
                 : completed >= course.lessons
-                  ? "All required lessons complete"
-                  : "Mark lesson complete (demo)"}
+                  ? "所有必修课时已完成"
+                  : "标记课时完成（演示）"}
             </Button>
           </div>
           {api.available && progress.isError && (
             <p className="error" role="alert">
               {apiErrorMessage(progress.error)}{" "}
               <Button className="secondary" type="button" onClick={() => void progress.refetch()}>
-                Retry
+                重试
               </Button>
             </p>
           )}
@@ -858,8 +821,8 @@ function LearningCourse({ course, apiCourse }: { course: Course; apiCourse?: Api
             <div className="success-panel">
               <BadgeCheck />
               <div>
-                <strong>Completion submitted for verification.</strong>
-                <p>Certificate status stays pending until API and worker checks finish.</p>
+                <strong>完成记录已提交核验。</strong>
+                <p>证书状态在 API 与 Worker 校验完成前保持待处理。</p>
               </div>
             </div>
           )}
@@ -902,17 +865,16 @@ function Profile() {
 
   return (
     <div className="page">
-      <PageIntro eyebrow="YOUR DASHBOARD" title="Wallet, learning and credentials.">
-        Your on-chain assets remain tied to your wallet. A username signature is a display-name
-        request, not a transfer of wallet control.
+      <PageIntro eyebrow="你的仪表盘" title="钱包、学习与凭证。">
+        你的链上资产始终由钱包掌控。用户名签名只是展示名请求，不会转移钱包控制权。
       </PageIntro>
       <section className="dashboard-grid">
         <Card>
-          <p className="eyebrow">CONNECTED WALLET</p>
-          <h2>{wallet.address ?? (runtime.isDemo ? profile.address : "Not connected")}</h2>
+          <p className="eyebrow">已连接钱包</p>
+          <h2>{wallet.address ?? (runtime.isDemo ? profile.address : "未连接")}</h2>
           <p className="muted">
-            Sepolia only ·{" "}
-            {runtime.isDemo ? profile.testAssets : (wallet.connectorName ?? "No wallet")}
+            仅限 Sepolia ·{" "}
+            {runtime.isDemo ? profile.testAssets : (wallet.connectorName ?? "无钱包")}
           </p>
           <Button
             className="secondary"
@@ -920,35 +882,35 @@ function Profile() {
             disabled={!wallet.address}
             onClick={() => wallet.address && void navigator.clipboard.writeText(wallet.address)}
           >
-            Copy address
+            复制地址
           </Button>
         </Card>
         <Card>
-          <p className="eyebrow">TEST BALANCE</p>
+          <p className="eyebrow">测试余额</p>
           <h2>{profile.ydBalance}</h2>
-          <p className="muted">Test YD · no monetary value</p>
+          <p className="muted">测试 YD · 无真实价值</p>
           <Link className="button secondary" to="/swap">
-            Get test YD
+            获取测试 YD
           </Link>
         </Card>
         <Card>
-          <p className="eyebrow">CERTIFICATES</p>
-          <h2>1 earned</h2>
-          <Link to="/certificates/solidity-basics">View credential →</Link>
+          <p className="eyebrow">证书</p>
+          <h2>已获得 1 张</h2>
+          <Link to="/certificates/solidity-basics">查看凭证 →</Link>
         </Card>
       </section>
       <section className="detail-grid">
         <Card>
-          <h2>Set a username</h2>
+          <h2>设置用户名</h2>
           <Field
-            label="Display username"
+            label="展示用户名"
             id="username"
             value={username}
             onChange={(event) => {
               setUsername(event.target.value);
               setProfileStatus("idle");
             }}
-            hint="A wallet signature is required before this can be shown publicly."
+            hint="公开展示前需要钱包签名确认。"
           />
           <Button
             type="button"
@@ -961,41 +923,41 @@ function Profile() {
             onClick={() => void saveUsername()}
           >
             {profileStatus === "signing"
-              ? "Confirm in wallet…"
+              ? "钱包确认中…"
               : profileStatus === "saved"
                 ? runtime.isDemo
-                  ? "Signature recorded (demo)"
-                  : "Username updated"
-                : "Sign username request"}
+                  ? "签名已记录（演示）"
+                  : "用户名已更新"
+                : "签署用户名请求"}
           </Button>
           {profileStatus === "saved" && (
             <p className="success-text" role="status">
               {runtime.isDemo
-                ? "Display-name request stored in demo state."
-                : "The API verified and consumed the one-time EIP-712 signature."}
+                ? "展示名请求已保存在演示状态中。"
+                : "API 已验证并消费该一次性 EIP-712 签名。"}
             </p>
           )}
           {profileStatus === "failed" && (
             <p className="error" role="alert">
-              Username update was not accepted. The challenge may be expired, cancelled or invalid.
+              用户名更新未被接受，挑战可能已过期、被取消或无效。
             </p>
           )}
         </Card>
         <Card>
-          <h2>Purchases and progress</h2>
+          <h2>购买与进度</h2>
           <div className="purchase-line">
             <div>
-              <strong>Solidity Foundations</strong>
-              <small>3/12 required lessons complete</small>
+              <strong>Solidity 基础</strong>
+              <small>已完成 3/12 节必修课时</small>
             </div>
-            <Status tone="success">Owned (demo)</Status>
+            <Status tone="success">已拥有（演示）</Status>
           </div>
           <div className="purchase-line">
             <div>
-              <strong>DeFi Protocol Patterns</strong>
-              <small>Not purchased</small>
+              <strong>DeFi 协议模式</strong>
+              <small>未购买</small>
             </div>
-            <Link to="/courses/defi-patterns">View course →</Link>
+            <Link to="/courses/defi-patterns">查看课程 →</Link>
           </div>
         </Card>
       </section>
@@ -1031,61 +993,61 @@ function Certificate() {
   });
   const tokenId = certificate.data;
   if (api.available && detail.isLoading) {
-    return <Card className="empty-state">Loading the certificate-bound course…</Card>;
+    return <Card className="empty-state">正在加载证书关联的课程…</Card>;
   }
   if (api.available && detail.isError) return <NotFound />;
   if (!course) return <NotFound />;
   return (
     <div className="page narrow">
-      <PageIntro eyebrow="CERTIFICATE" title={course.title}>
-        A non-transferable completion credential for the purchasing wallet.
+      <PageIntro eyebrow="证书" title={course.title}>
+        发放给购买钱包的不可转让完成凭证。
       </PageIntro>
       <Card className="certificate">
         <BadgeCheck size={48} />
-        <p>{live ? "Contract lookup for" : "Demo metadata for"}</p>
+        <p>{live ? "合约查询对象" : "演示数据对象"}</p>
         <h2>
           {wallet.address
             ? `${wallet.address.slice(0, 6)}…${wallet.address.slice(-4)}`
-            : "No connected wallet"}
+            : "未连接钱包"}
         </h2>
         <p>
-          completed <strong>{course.title}</strong>
+          完成了 <strong>{course.title}</strong>
         </p>
         <dl>
           <div>
-            <dt>Credential ID</dt>
+            <dt>凭证编号</dt>
             <dd>
               {runtime.isDemo
-                ? "#000042 (demo)"
+                ? "#000042（演示）"
                 : certificate.isLoading
-                  ? "Reading…"
+                  ? "读取中…"
                   : certificate.isError
-                    ? "Unavailable"
+                    ? "暂不可用"
                     : tokenId && tokenId > 0n
                       ? `#${tokenId}`
-                      : "No certificate"}
+                      : "暂无证书"}
             </dd>
           </div>
           <div>
-            <dt>Wallet</dt>
-            <dd>{wallet.address ?? "Not connected"}</dd>
+            <dt>钱包</dt>
+            <dd>{wallet.address ?? "未连接"}</dd>
           </div>
           <div>
-            <dt>Network</dt>
+            <dt>网络</dt>
             <dd>Sepolia</dd>
           </div>
           <div>
-            <dt>Transferability</dt>
-            <dd>Non-transferable</dd>
+            <dt>可转让性</dt>
+            <dd>不可转让</dd>
           </div>
         </dl>
         <a href="https://sepolia.etherscan.io" target="_blank" rel="noreferrer">
-          View transaction explorer <ExternalLink size={15} />
+          查看区块浏览器 <ExternalLink size={15} />
         </a>
         <p className="fine-print">
           {runtime.isDemo
-            ? "Fake demo metadata; it is not an on-chain credential."
-            : "Read-only contract result. A receipt and API status remain separate evidence."}
+            ? "演示数据，并非链上凭证。"
+            : "合约只读结果；回执与 API 状态仍是相互独立的证据。"}
         </p>
       </Card>
     </div>
@@ -1106,9 +1068,8 @@ function OracleDemo() {
   const decimals = oracle.data?.[1];
   return (
     <div className="page narrow">
-      <PageIntro eyebrow="ISOLATED DEMO" title="Chainlink ETH / USD reference feed">
-        This educational screen is not connected to swap or purchase pricing. It must never be
-        treated as the CourseMarket price source.
+      <PageIntro eyebrow="独立演示" title="Chainlink ETH / USD 参考喂价">
+        该教学页面与兑换或购买定价无关，绝不能作为 CourseMarket 的价格来源。
       </PageIntro>
       <Card className="oracle-card">
         <div className="row spread">
@@ -1116,35 +1077,31 @@ function OracleDemo() {
             <p className="eyebrow">ETH / USD</p>
             <h2>
               {runtime.isDemo
-                ? "$3,412.18 (fake)"
+                ? "$3,412.18（虚假数据）"
                 : oracle.isLoading
-                  ? "Reading…"
+                  ? "读取中…"
                   : oracle.isError || price === undefined || decimals === undefined
-                    ? "Unavailable"
+                    ? "暂不可用"
                     : `$${formatUnits(price, decimals)}`}
             </h2>
             <p className="muted">
-              {runtime.isDemo
-                ? "Fake demo snapshot · Sepolia label"
-                : "Read-only ChainlinkPriceOracle result"}
+              {runtime.isDemo ? "演示快照 · Sepolia 标签" : "ChainlinkPriceOracle 只读结果"}
             </p>
           </div>
-          <Status tone="warning">Read only</Status>
+          <Status tone="warning">只读</Status>
         </div>
         {oracle.isError && !runtime.isDemo && (
           <p className="error" role="alert">
-            The oracle adapter could not return an answer. Retry does not substitute an
-            authoritative quote.
+            预言机适配器未能返回结果。重试也不会生成权威报价。
           </p>
         )}
         <div className="button-row">
           <Button type="button" disabled>
-            <RefreshCw size={16} /> {runtime.isDemo ? "Fake data only" : "Read-only query"}
+            <RefreshCw size={16} /> {runtime.isDemo ? "仅演示数据" : "只读查询"}
           </Button>
         </div>
         <p className="fine-print">
-          Only a configured Chainlink adapter may read a feed. This display has no connection to YD
-          pricing, settlement or any user funds.
+          只有配置好的 Chainlink 适配器才能读取喂价。该展示与 YD 定价、结算或任何用户资金均无关联。
         </p>
       </Card>
     </div>

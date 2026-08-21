@@ -153,6 +153,6 @@ describe("UniversityApi", () => {
     const error = await api.reviewCourse("course-1", true).catch((caught) => caught);
     expect(error).toBeInstanceOf(ApiRequestError);
     expect((error as ApiRequestError).status).toBe(409);
-    expect(apiErrorMessage(error)).toMatch(/conflict/i);
+    expect(apiErrorMessage(error)).toMatch(/冲突/);
   });
 });

@@ -16,30 +16,34 @@
 | F-002 | `specs/course-content-learning-feature` | ready | none | User confirmed local-only development and document completion rule | high | QA-3 | required | AC-001 through AC-012 have local evidence and feature review passes |
 | F-003 | `specs/certificate-delivery-reliability-feature` | waiting | F-002 | F-002 feature review passes | high | QA-3 | required | AC-001 through AC-008 have local evidence and feature review passes |
 | F-004 | `specs/teacher-admin-comments-closure-feature` | completed | none | User confirmed adoption of the current teacher/admin/comments worktree | high | QA-3 | PASS_WITH_NOTES | Run `f004-t001-teacher-admin-comments-closure-a2` accepted; P0/P1=0 |
+| F-005 | `specs/zh-cn-localization-feature` | completed | none | Browser visual evidence is available | medium | QA-2 | PASS | Run `f005-t001-zh-cn-localization-a4` accepted with P0/P1/P2=0 |
+| F-006 | `specs/yd-token-supply-feature` | completed | none | User confirmed fixed 80,000,000 YD and local-only development | high | QA-3 | PASS | Run `f006-t001-yd-supply-a2` completed; 25 Foundry tests and scoped review passed |
+| F-007 | `specs/sepolia-contract-deployment-feature` | completed | F-006 | User explicitly approved Sepolia YDToken-only deployment and source verification | critical | QA-4 | PASS | Run `f007-t002-yd-sepolia-deploy-a1` completed; AC-006 public-chain and Etherscan verification passed with P0/P1/P2=0 |
 
 ## Ready Queue
 
-- Completed: F-001/T-001, F-002/T-001 through T-004, and F-004/T-001; latest accepted run is `f004-t001-teacher-admin-comments-closure-a2`.
-- Proposed next task for user confirmation: F-002/T-005 desktop student video/document learning UI. Only one task may run at a time.
+- Ready now: none selected; await the user's next feature decision.
+- Completed: F-001/T-001, F-002/T-001 through T-004, F-004/T-001, F-005/T-001, F-006/T-001, and F-007/T-001 through T-002.
 - Paused but still ready: F-001/T-002; its existing dependency chain is unchanged.
 - Waiting on dependencies: F-003 waits for F-002 feature review.
 
 ## Current Cursor
 
-- Run ID: `f004-t001-teacher-admin-comments-closure-a2` completed and Runner accepted
-- Active feature: none; awaiting user confirmation of the next backlog item
+- Run ID: `f007-t002-yd-sepolia-deploy-a1` (completed)
+- Active feature: none
 - Active task: none
-- Last completed: F-004/T-001 with teacher/admin/comments API and UI boundaries, 66 Node tests, workspace typecheck, Web build, Biome, and desktop/tablet visual evidence
-- Next action: confirm F-002/T-005, then start a fresh scoped UI task from clean commit `54dd5ba`
+- Last completed: F-007/T-002 deployed and verified YDToken on Ethereum Sepolia
+- Next action: await the user's next feature selection; do not infer authorization to deploy the remaining contracts or create Uniswap pools
+- XJ projection note: Harness run status is `completed` and the pre-checkbox Runner returned `ready-to-complete`; the post-checkbox Runner reports `E_HARNESS_PREEXISTING_DRIFT` because this untracked specs file was already present at run start. Treat this as a Runner projection limitation, not as deployment or verification failure.
 
 ## Global Gates
 
 - Security: no private keys in Git; only documented Anvil development keys may be supplied at runtime.
-- Payment / cost: no real funds, paid RPC or external deployment.
+- Payment / cost: only Sepolia test ETH was spent for the explicitly approved YDToken deployment; no mainnet funds or paid resource was authorized.
 - PII outbound: none.
-- External API: none required.
+- External API: the F-007 post-deployment verifier performs read-only Sepolia RPC and Etherscan source checks using local secret references.
 - Browser / visual: F-004 Demo fail-closed states were checked at Desktop 1440x900 and Tablet 1024x768; future UI tasks retain their own visual gates.
-- Deployment: local Anvil only; Sepolia and cloud deployment remain unapproved.
+- Deployment: YDToken is deployed and source-verified on Ethereum Sepolia at `0x63c887858f27b1d558f16b13f35a0a1b5fb8cde8`; all other contracts, Uniswap pools and cloud deployment remain unapproved.
 - Upload processing: local MinIO and local FFmpeg/ffprobe only; no AWS or paid media service.
 - Resource policy: strictly sequential focused checks; actual token count is recorded as `unavailable` when the Harness cannot observe it.
 
@@ -70,7 +74,7 @@
 ### Explicit external-confirmation gates
 
 1. Initialize and fund the Sepolia Test USDT/YD and native ETH/YD Uniswap v4 pools after separately confirming both-side asset amounts and initial ratios.
-2. Deploy and verify the five contracts on Sepolia, then record exact addresses and deployment blocks.
+2. F-007/T-002: deploy and verify YDToken on Sepolia under the user's explicit confirmation, then record its exact address, transaction, deployment block and source-verification evidence; the other four contracts remain unauthorized.
 3. Configure a real Privy tenant, funded test wallets and Alchemy/Infura RPC without committing secrets.
 4. Deploy Subgraph and cloud services/AWS only after environment, cost, secrets and rollback approval.
 
@@ -87,3 +91,4 @@
 - T-003 recovery note: the first run was blocked after review found raw queue SQL lacked real PostgreSQL evidence; a2 added claim, lease, recovery, retry and terminal-state execution evidence.
 - F-004 is a one-time adoption closure because existing backend/UI/docs changes overlap shared files. No new UI design is introduced; visual evidence remains mandatory and the normal layered task split resumes afterward.
 - F-004 recovery note: the first run was preserved as blocked after its second unreferenced visual artifact conflicted with Runner scope. The a2 run used one reviewed composite visual file and was accepted.
+- F-005 recovery note: run `a2` remains blocked evidence for the unavailable-browser period and run `a3` records a visual-evidence ordering rejection; recovery run `a4` reuses the verified implementation and attaches Desktop 1440x900 plus Tablet 1024x768 browser evidence in the required submit-to-review window without changing authentication behavior.

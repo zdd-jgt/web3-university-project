@@ -1,0 +1,43 @@
+# Sepolia YDToken 首发准备任务
+
+- [x] T-001: 准备安全的 Sepolia YDToken 首发脚本、模板、测试和文档 ~1h
+  - role: ops
+  - environment: local
+  - operation_mode: prepare-only
+  - depends_on: none
+  - owned_paths: packages/contracts/script/DeployYDSepolia.s.sol, packages/contracts/test/DeployYDSepolia.t.sol, packages/contracts/sepolia.env.example, docs/yd-sepolia-deployment.md
+  - shared_files: none
+  - risk: high
+  - qa_level: QA-3
+  - review_required: yes
+  - acceptance: AC-001, AC-002, AC-003, AC-004, AC-005
+  - test_cases: TC-001, TC-002, TC-003, TC-004
+  - verify: contracts-sepolia-prep
+  - review_verify: contracts-format
+  - agent_route: sol
+  - estimated_tokens: 7000
+  - estimated_time: 1h
+  - goal_required: no
+  - visual_required: no
+  - rollback_or_blocker: 仅准备本地文件；发现需要真实 RPC、私钥、广播或付费操作时立即阻止
+
+- [x] T-002: 在 Ethereum Sepolia 广播并验证 YDToken ~1h
+  - role: ops
+  - environment: test
+  - operation_mode: requires-confirmation
+  - depends_on: T-001
+  - owned_paths: infra/scripts/verify-yd-sepolia-deployment.mjs, docs/deployments/ydtoken-sepolia.json, docs/deployments/ydtoken-sepolia.md
+  - shared_files: none
+  - risk: critical
+  - qa_level: QA-4
+  - review_required: yes
+  - acceptance: AC-006
+  - test_cases: TC-005
+  - verify: contracts-yd-sepolia-postdeploy
+  - review_verify: contracts-yd-sepolia-postdeploy
+  - agent_route: sol
+  - estimated_tokens: 5000
+  - estimated_time: 1h
+  - goal_required: no
+  - visual_required: no
+  - rollback_or_blocker: 用户已明确授权只在 Sepolia 部署 YDToken 并验证源码；若广播状态不明或源码验证失败，禁止重复广播，先按交易哈希恢复验证

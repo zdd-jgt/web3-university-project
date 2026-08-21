@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Status } from "../../components/ui";
 import { apiErrorMessage, type UniversityApi } from "../../lib/api";
+import { formatZhTime, learningReasonLabel } from "../../lib/localization";
 import { useLearningSession } from "./useLearningSession";
 
 const HEARTBEAT_INTERVAL_MS = 10_000;
@@ -64,7 +65,7 @@ export function VideoLessonPlayer({
       // A superseded session's verdict is stale and must not touch current state.
       if (sessionRef.current?.sessionId !== target) return;
       sequenceRef.current = sequence;
-      setHeartbeatRejected(result.accepted ? null : (result.reason ?? "rejected"));
+      setHeartbeatRejected(result.accepted ? null : learningReasonLabel(result.reason));
       if (result.accepted) {
         onProgressRef.current();
         // Server-authoritative completion (95% coverage): heartbeats stop immediately.
@@ -91,8 +92,8 @@ export function VideoLessonPlayer({
   if (phase === "failed" || lost) {
     return (
       <div className="video-shell" role="alert">
-        <span>Playback session unavailable</span>
-        <small>{lost ?? error ?? "The learning session was rejected by the server."}</small>
+        <span>播放会话不可用</span>
+        <small>{lost ?? error ?? "学习会话已被服务端拒绝。"}</small>
         <Button
           type="button"
           onClick={() => {
@@ -100,7 +101,7 @@ export function VideoLessonPlayer({
             retry();
           }}
         >
-          Resume learning session
+          恢复学习会话
         </Button>
       </div>
     );
@@ -109,8 +110,8 @@ export function VideoLessonPlayer({
   if (phase === "starting" || !session) {
     return (
       <div className="video-shell">
-        <span>Opening protected playback session…</span>
-        <small>The server verifies your purchase before signing a short-lived video URL.</small>
+        <span>正在开启受保护的播放会话…</span>
+        <small>服务端会先核验你的购买凭证，再签发短期有效的视频链接。</small>
       </div>
     );
   }
@@ -134,11 +135,11 @@ export function VideoLessonPlayer({
             const resumed = event.currentTarget.play();
             void resumed?.catch(() => {
               playingRef.current = false;
-              setResumeNotice("Playback position restored. Press play to continue.");
+              setResumeNotice("播放位置已恢复，请按播放键继续。");
             });
           } catch {
             playingRef.current = false;
-            setResumeNotice("Playback position restored. Press play to continue.");
+            setResumeNotice("播放位置已恢复，请按播放键继续。");
           }
         }}
         onPlay={() => {
@@ -156,20 +157,19 @@ export function VideoLessonPlayer({
           void sendHeartbeat();
         }}
       >
-        Your browser does not support protected video playback.
+        你的浏览器不支持受保护的视频播放。
       </video>
       <div className="video-session-meta">
         <Status tone={done ? "success" : "neutral"}>
-          {done ? "Lesson complete" : "Coverage is verified by server-side heartbeats"}
+          {done ? "课时已完成" : "覆盖率由服务端心跳校验"}
         </Status>
         <small className="muted">
-          Session expires {new Date(session.sessionExpiresAt).toLocaleTimeString()} · seeking and
-          paused time never count toward coverage.
+          会话于 {formatZhTime(session.sessionExpiresAt)} 过期 · 拖动进度与暂停时间不计入覆盖率。
         </small>
       </div>
       {renewalError && (
         <p className="fine-print" role="status">
-          Access refresh is retrying. Current playback remains active ({renewalError}).
+          正在重试刷新访问凭证，当前播放不受影响（{renewalError}）。
         </p>
       )}
       {resumeNotice && (
@@ -179,8 +179,8 @@ export function VideoLessonPlayer({
       )}
       {heartbeatRejected && (
         <p className="error" role="alert">
-          The last progress report was not accepted ({heartbeatRejected}). Keep playing normally;
-          replayed or out-of-order reports are ignored by design.
+          上一条进度上报未被接受（{heartbeatRejected}
+          ）。请继续正常播放，重复或乱序的上报按设计会被忽略。
         </p>
       )}
     </div>

@@ -70,7 +70,7 @@ describe("VideoLessonPlayer", () => {
     );
 
     const video = await screen
-      .findByText(/browser does not support/)
+      .findByText(/你的浏览器不支持受保护的视频播放/)
       .then(() => document.querySelector("video"));
     expect(video).not.toBeNull();
     expect(video?.getAttribute("src")).toBe("https://signed.example/video.mp4");
@@ -90,6 +90,34 @@ describe("VideoLessonPlayer", () => {
     );
   });
 
+  it("explains a server-rejected heartbeat in Chinese while retaining its diagnostic code", async () => {
+    apiMock.startLearningSession.mockResolvedValue(videoSession);
+    apiMock.learningHeartbeat.mockResolvedValue({
+      replayed: false,
+      accepted: false,
+      reason: "SEEK",
+      eventId: "event-rejected",
+      coveredMs: 0,
+      lessonComplete: false,
+      completion: null,
+    });
+    renderPlayer(
+      <VideoLessonPlayer
+        api={apiMock as never}
+        lessonId="lesson-1"
+        complete={false}
+        onProgressChanged={vi.fn()}
+      />,
+    );
+
+    const video = await screen
+      .findByText(/你的浏览器不支持受保护的视频播放/)
+      .then(() => document.querySelector("video"));
+    fireEvent.play(video as Element);
+
+    expect(await screen.findByText(/检测到跳播，本次不计入进度（SEEK）/)).toBeInTheDocument();
+  });
+
   it("recovers through an explicit resume after a rejected heartbeat", async () => {
     apiMock.startLearningSession.mockResolvedValue(videoSession);
     apiMock.learningHeartbeat.mockRejectedValue(new Error("conflict"));
@@ -103,11 +131,11 @@ describe("VideoLessonPlayer", () => {
     );
 
     const video = await screen
-      .findByText(/browser does not support/)
+      .findByText(/你的浏览器不支持受保护的视频播放/)
       .then(() => document.querySelector("video"));
     fireEvent.play(video as Element);
-    expect(await screen.findByText(/Playback session unavailable/)).toBeInTheDocument();
-    expect(await screen.findByRole("button", { name: "Resume learning session" }));
+    expect(await screen.findByText(/播放会话不可用/)).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "恢复学习会话" }));
 
     apiMock.learningHeartbeat.mockResolvedValue({
       replayed: false,
@@ -115,9 +143,9 @@ describe("VideoLessonPlayer", () => {
       completion: null,
     });
     apiMock.startLearningSession.mockResolvedValue({ ...videoSession, sessionId: "session-9" });
-    fireEvent.click(screen.getByRole("button", { name: "Resume learning session" }));
+    fireEvent.click(screen.getByRole("button", { name: "恢复学习会话" }));
     await waitFor(() => expect(apiMock.startLearningSession).toHaveBeenCalledTimes(2));
-    expect(screen.queryByText(/Playback session unavailable/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/播放会话不可用/)).not.toBeInTheDocument();
   });
 
   it("creates exactly one learning session under React StrictMode", async () => {
@@ -134,7 +162,7 @@ describe("VideoLessonPlayer", () => {
     );
 
     const video = await screen
-      .findByText(/browser does not support/)
+      .findByText(/你的浏览器不支持受保护的视频播放/)
       .then(() => document.querySelector("video"));
     expect(video?.getAttribute("src")).toBe("https://signed.example/video.mp4");
     // StrictMode re-runs mount effects; the single-flight guard keeps the POST to one.
@@ -236,7 +264,7 @@ describe("VideoLessonPlayer", () => {
         await vi.advanceTimersByTimeAsync(0);
       });
       expect(apiMock.learningHeartbeat).toHaveBeenCalledTimes(1);
-      expect(screen.getByText("Lesson complete")).toBeInTheDocument();
+      expect(screen.getByText("课时已完成")).toBeInTheDocument();
 
       // Playback keeps going, including through a credential renewal, but no further heartbeat
       // may leave and the local completion fact must not be reset.
@@ -245,8 +273,8 @@ describe("VideoLessonPlayer", () => {
       });
       expect(apiMock.startLearningSession).toHaveBeenCalledTimes(2);
       expect(apiMock.learningHeartbeat).toHaveBeenCalledTimes(1);
-      expect(screen.getByText("Lesson complete")).toBeInTheDocument();
-      expect(screen.queryByText(/Playback session unavailable/)).not.toBeInTheDocument();
+      expect(screen.getByText("课时已完成")).toBeInTheDocument();
+      expect(screen.queryByText(/播放会话不可用/)).not.toBeInTheDocument();
     } finally {
       vi.useRealTimers();
     }
@@ -363,11 +391,11 @@ describe("VideoLessonPlayer", () => {
       await act(async () => {
         await vi.advanceTimersByTimeAsync(30_000);
       });
-      expect(screen.getByText(/Access refresh is retrying/)).toBeInTheDocument();
+      expect(screen.getByText(/正在重试刷新访问凭证/)).toBeInTheDocument();
       expect(document.querySelector("video")?.getAttribute("src")).toBe(
         "https://signed.example/video.mp4",
       );
-      expect(screen.queryByText(/Playback session unavailable/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/播放会话不可用/)).not.toBeInTheDocument();
 
       await act(async () => {
         await vi.advanceTimersByTimeAsync(5_000);
@@ -376,7 +404,7 @@ describe("VideoLessonPlayer", () => {
       expect(document.querySelector("video")?.getAttribute("src")).toBe(
         "https://signed.example/video-3.mp4",
       );
-      expect(screen.queryByText(/Playback session unavailable/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/播放会话不可用/)).not.toBeInTheDocument();
     } finally {
       vi.useRealTimers();
     }
@@ -448,7 +476,7 @@ describe("VideoLessonPlayer", () => {
       await act(async () => {
         await vi.advanceTimersByTimeAsync(0);
       });
-      expect(screen.queryByText(/Playback session unavailable/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/播放会话不可用/)).not.toBeInTheDocument();
     } finally {
       vi.useRealTimers();
     }
@@ -479,10 +507,10 @@ describe("DocumentLesson", () => {
     );
 
     const confirm = await screen.findByRole("button", {
-      name: "Confirm I have read this document",
+      name: "确认我已阅读该文档",
     });
     expect(confirm).toBeDisabled();
-    const openLink = screen.getByRole("link", { name: /Open document/ });
+    const openLink = screen.getByRole("link", { name: /打开文档/ });
     expect(openLink).toHaveAttribute("href", "https://signed.example/doc.pdf");
 
     fireEvent.click(openLink);
@@ -505,12 +533,10 @@ describe("DocumentLesson", () => {
       />,
     );
 
-    expect(await screen.findByText(/Document access session unavailable/)).toBeInTheDocument();
+    expect(await screen.findByText(/文档访问会话不可用/)).toBeInTheDocument();
     apiMock.startLearningSession.mockResolvedValue(documentSession);
-    fireEvent.click(screen.getByRole("button", { name: "Retry document access" }));
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Confirm I have read this document" })),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "重试文档访问" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "确认我已阅读该文档" })));
   });
 
   it("creates exactly one access session under React StrictMode", async () => {
@@ -528,7 +554,7 @@ describe("DocumentLesson", () => {
       </StrictMode>,
     );
 
-    await screen.findByRole("button", { name: "Confirm I have read this document" });
+    await screen.findByRole("button", { name: "确认我已阅读该文档" });
     await waitFor(() => expect(apiMock.startLearningSession).toHaveBeenCalledTimes(1));
   });
 });

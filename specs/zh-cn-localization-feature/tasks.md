@@ -1,0 +1,24 @@
+# 正经打工人的 web3大学中文本地化任务
+
+- [x] T-001: 收口全站中文品牌、Privy 文案、状态解释与 zh-CN 格式 ~1h
+  - role: frontend
+  - depends_on: none
+  - owned_paths: apps/web/index.html, apps/web/src/components/layout.tsx, apps/web/src/features/admin/AdminPage.tsx, apps/web/src/features/admin/AdminPage.test.tsx, apps/web/src/features/comments/CommentsSection.tsx, apps/web/src/features/comments/CommentsSection.test.tsx, apps/web/src/features/course-content/DocumentLesson.tsx, apps/web/src/features/course-content/VideoLessonPlayer.tsx, apps/web/src/features/course-content/course-content.test.tsx, apps/web/src/features/swap/SwapPage.tsx, apps/web/src/features/teacher/TeacherPage.tsx, apps/web/src/features/teacher/TeacherPage.test.tsx, apps/web/src/lib/api.ts, apps/web/src/lib/api.test.ts, apps/web/src/lib/data.ts, apps/web/src/lib/runtime.tsx, apps/web/src/lib/localization.ts, apps/web/src/lib/localization.test.ts, apps/web/src/pages/app.tsx, apps/web/src/pages/app.test.tsx, specs/zh-cn-localization-feature, specs/xj-feature-plan.md
+  - shared_files: apps/web/src/lib/runtime.tsx, apps/web/src/lib/localization.ts, specs/xj-feature-plan.md
+  - risk: medium
+  - qa_level: QA-2
+  - review_required: yes
+  - acceptance: AC-001, AC-002, AC-003, AC-004, AC-005
+  - test_cases: TC-001, TC-002, TC-003, TC-004, TC-005
+  - verify: teacher-admin-comments-closure
+  - review_verify: web-typecheck
+  - agent_route: terra-frontend
+  - estimated_tokens: 18000
+  - estimated_time: 1h
+  - goal_required: yes
+  - ui_mode: standard
+  - design_source: none
+  - visual_required: yes
+  - baseline_action: candidate
+  - mobile_required: no
+  - rollback_or_blocker: Run `a2` 保留浏览器不可用记录，run `a3` 保留视觉证据顺序错误记录；内置 Browser 已完成验收，恢复 run `f005-t001-zh-cn-localization-a4` 按 submit 后、review 前加入截图，且不修改认证行为或引入新依赖

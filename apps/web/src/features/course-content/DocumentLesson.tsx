@@ -2,6 +2,7 @@ import { ExternalLink } from "lucide-react";
 import { useRef, useState } from "react";
 import { Button, Status } from "../../components/ui";
 import { apiErrorMessage, type UniversityApi } from "../../lib/api";
+import { formatZhTime } from "../../lib/localization";
 import { useLearningSession } from "./useLearningSession";
 
 export function DocumentLesson({
@@ -46,10 +47,10 @@ export function DocumentLesson({
   if (phase === "failed") {
     return (
       <div className="video-shell" role="alert">
-        <span>Document access session unavailable</span>
-        <small>{error ?? "The server rejected the access session."}</small>
+        <span>文档访问会话不可用</span>
+        <small>{error ?? "服务端已拒绝该访问会话。"}</small>
         <Button type="button" onClick={() => retry()}>
-          Retry document access
+          重试文档访问
         </Button>
       </div>
     );
@@ -58,8 +59,8 @@ export function DocumentLesson({
   if (phase === "starting" || !session) {
     return (
       <div className="video-shell">
-        <span>Opening document access session…</span>
-        <small>The server verifies your purchase before signing a short-lived read URL.</small>
+        <span>正在开启文档访问会话…</span>
+        <small>服务端会先核验你的购买凭证，再签发短期有效的阅读链接。</small>
       </div>
     );
   }
@@ -68,17 +69,16 @@ export function DocumentLesson({
     <div className="document-lesson">
       <div className="row spread">
         <div>
-          <p className="eyebrow">PROTECTED DOCUMENT</p>
+          <p className="eyebrow">受保护文档</p>
           <h2>{fileName}</h2>
-          <p className="muted">{mimeType ?? "Verified MIME type unavailable"}</p>
+          <p className="muted">{mimeType ?? "暂无已核验的 MIME 类型"}</p>
         </div>
         <Status tone={complete ? "success" : "neutral"}>
-          {complete ? "Read confirmed" : "Awaiting confirmation"}
+          {complete ? "已确认阅读" : "待确认阅读"}
         </Status>
       </div>
       <p>
-        Open the document with your short-lived access link, then confirm you have read it. Opening
-        the link alone does not complete the lesson, and the confirmation is idempotent.
+        使用你的短期访问链接打开文档，然后确认已阅读。仅打开链接不会完成课时，确认操作可重复提交且结果一致。
       </p>
       <div className="button-row">
         <a
@@ -88,27 +88,23 @@ export function DocumentLesson({
           rel="noreferrer"
           onClick={() => setOpened(true)}
         >
-          Open document <ExternalLink size={13} />
+          打开文档 <ExternalLink size={13} />
         </a>
         <Button
           type="button"
           disabled={!opened || confirming || complete}
           onClick={() => void confirmRead()}
         >
-          {complete
-            ? "Lesson complete"
-            : confirming
-              ? "Confirming…"
-              : "Confirm I have read this document"}
+          {complete ? "课时已完成" : confirming ? "正在确认…" : "确认我已阅读该文档"}
         </Button>
       </div>
       <p className="fine-print">
-        Access link expires {new Date(session.urlExpiresAt).toLocaleTimeString()}. Confirmation
-        without a successful access is rejected by the server.
+        访问链接于 {formatZhTime(session.urlExpiresAt)}
+        过期。没有成功访问记录的确认会被服务端拒绝。
       </p>
       {renewalError && (
         <p className="fine-print" role="status">
-          Access refresh is retrying. The current document link remains available ({renewalError}).
+          正在重试刷新访问凭证，当前文档链接仍可使用（{renewalError}）。
         </p>
       )}
       {confirmError && (

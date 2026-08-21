@@ -9,7 +9,7 @@ export type Course = {
   title: string;
   summary: string;
   teacher: string;
-  level: "Foundation" | "Intermediate" | "Advanced";
+  level: "入门" | "进阶" | "高级";
   price: string;
   lessons: number;
   hours: string;
@@ -22,13 +22,13 @@ export const courses: Course[] = [
     chainId: 11_155_111,
     catalogAddress: null,
     contractCourseId: 1n,
-    title: "Solidity Foundations",
-    summary: "Build a mental model for contracts, transactions and storage.",
+    title: "Solidity 基础",
+    summary: "建立对合约、交易与存储的心智模型。",
     teacher: "Maya Chen",
-    level: "Foundation",
+    level: "入门",
     price: "50",
     lessons: 12,
-    hours: "4h 20m",
+    hours: "4 小时 20 分",
     accent: "violet",
   },
   {
@@ -36,13 +36,13 @@ export const courses: Course[] = [
     chainId: 11_155_111,
     catalogAddress: null,
     contractCourseId: 2n,
-    title: "DeFi Protocol Patterns",
-    summary: "Understand swap mechanics, price risk and common protocol invariants.",
+    title: "DeFi 协议模式",
+    summary: "理解兑换机制、价格风险与常见协议不变量。",
     teacher: "Omar Diallo",
-    level: "Intermediate",
+    level: "进阶",
     price: "75",
     lessons: 16,
-    hours: "6h 10m",
+    hours: "6 小时 10 分",
     accent: "cyan",
   },
   {
@@ -50,13 +50,13 @@ export const courses: Course[] = [
     chainId: 11_155_111,
     catalogAddress: null,
     contractCourseId: 3n,
-    title: "Secure DApp Design",
-    summary: "Model trust boundaries before connecting a browser to a contract.",
+    title: "安全的 DApp 设计",
+    summary: "在浏览器连接合约之前，先厘清信任边界。",
     teacher: "Alice Nguyen",
-    level: "Advanced",
+    level: "高级",
     price: "90",
     lessons: 14,
-    hours: "5h 35m",
+    hours: "5 小时 35 分",
     accent: "pink",
   },
 ];
@@ -65,7 +65,7 @@ export const courseById = (id: string | undefined) => courses.find((course) => c
 
 export function courseFromApi(course: ApiCourse | ApiCourseDetail): Course {
   let contractCourseId = 0n;
-  let price = "Unavailable";
+  let price = "暂不可用";
   try {
     if (course.chainCourseId) contractCourseId = BigInt(course.chainCourseId);
     if (course.priceYD) price = formatUnits(BigInt(course.priceYD), 18);
@@ -81,10 +81,10 @@ export function courseFromApi(course: ApiCourse | ApiCourseDetail): Course {
     title: course.title,
     summary: course.description,
     teacher: course.teacherId,
-    level: "Foundation",
+    level: "入门",
     price,
     lessons,
-    hours: lessons ? `${lessons} required/optional lessons` : "Self-paced",
+    hours: lessons ? `${lessons} 节必修/选修课时` : "自主安排进度",
     accent: "cyan",
   };
 }

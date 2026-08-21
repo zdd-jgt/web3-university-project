@@ -67,8 +67,8 @@ describe("CommentsSection", () => {
     renderSection();
 
     expect(await screen.findByText("How are replay attacks prevented?")).toBeInTheDocument();
-    expect(screen.getByText(/Demo mode: posting is disabled/)).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Post comment" })).not.toBeInTheDocument();
+    expect(screen.getByText(/演示模式：评论功能已禁用/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "发布评论" })).not.toBeInTheDocument();
   });
 
   it("posts a comment through the API for an authenticated purchaser", async () => {
@@ -82,13 +82,13 @@ describe("CommentsSection", () => {
     });
     renderSection();
 
-    const box = await screen.findByLabelText("Add a comment");
+    const box = await screen.findByLabelText("添加评论");
     fireEvent.change(box, { target: { value: "Follow-up" } });
-    fireEvent.click(screen.getByRole("button", { name: "Post comment" }));
+    fireEvent.click(screen.getByRole("button", { name: "发布评论" }));
     await waitFor(() =>
       expect(apiMock.createComment).toHaveBeenCalledWith("course-1", "Follow-up"),
     );
-    expect(screen.getByRole("status")).toHaveTextContent("Comment posted.");
+    expect(screen.getByRole("status")).toHaveTextContent("评论已发布。");
   });
 
   it("offers a reply form only to the course teacher and sends the parent id", async () => {
@@ -102,12 +102,12 @@ describe("CommentsSection", () => {
     });
     renderSection("teacher-1");
 
-    expect(await screen.findByText("Teacher")).toBeInTheDocument();
-    fireEvent.click(await screen.findByRole("button", { name: "Reply as teacher" }));
-    fireEvent.change(screen.getByLabelText("Teacher reply"), {
+    expect(await screen.findByText("教师")).toBeInTheDocument();
+    fireEvent.click(await screen.findByRole("button", { name: "以教师身份回复" }));
+    fireEvent.change(screen.getByLabelText("教师回复"), {
       target: { value: "Clarified in lesson 3." },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Send reply" }));
+    fireEvent.click(screen.getByRole("button", { name: "发送回复" }));
     await waitFor(() =>
       expect(apiMock.createComment).toHaveBeenCalledWith(
         "course-1",
@@ -123,6 +123,6 @@ describe("CommentsSection", () => {
     renderSection("teacher-1");
 
     expect(await screen.findByText("How are replay attacks prevented?")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Reply as teacher" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "以教师身份回复" })).not.toBeInTheDocument();
   });
 });
